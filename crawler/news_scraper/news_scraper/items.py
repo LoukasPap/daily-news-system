@@ -17,5 +17,6 @@ def serialize_datetime(value):
 class NewsScraperItem(scrapy.Item):
     url = scrapy.Field()
     authors = scrapy.Field()
+    body = scrapy.Field()
     title = scrapy.Field(serializer=lambda x: x.strip())
-    datetime = scrapy.Field(serializer=serialize_datetime)
+    datetime = scrapy.Field()
