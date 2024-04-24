@@ -2,7 +2,7 @@ import scrapy
 from datetime import datetime as dt
 from news_scraper.items import NewsScraperItem
 from news_scraper.helpers import *
-
+import re
 
 # from news_scraper.news_scraper.helpers import convert_datetime_timezone
 
@@ -50,19 +50,30 @@ class NewsSpiderCNN(scrapy.Spider):
                 text = (''.join(i.xpath('descendant-or-self::text()').extract())).strip()
             body += text
 
-        authors = response.css('span.byline__name::text').getall()
+        authors = ','.join(
+            [a.strip() \
+                 .removeprefix('By') \
+                 .removeprefix('Analysis by') \
+                 .removesuffix(" and") \
+                 .removesuffix(", CNN")
+             for a in
+             response.css('span.byline__name::text, div.byline__names::text').getall()])  # slicing avoids ', CNN'
+
+        authors = re.sub(',+', ',', authors.removeprefix(',').removesuffix(',').replace('and', '')).strip()
+
         datetime = response.css('div.timestamp::text').get() \
             .strip() \
             .replace("\n", "") \
             .replace(" EDT", "") \
-            .removeprefix("Updated        ")
+            .removeprefix("Updated        ") \
+            .removeprefix("Published        ")
 
         datetime = convert_datetime_timezone(datetime, self.cnn_date_format, "US/Eastern")
 
         new_item["url"] = url
         new_item["title"] = title
         new_item["body"] = body
-        new_item["authors"] = ','.join(authors)
+        new_item["authors"] = authors
         new_item["datetime"] = datetime
         new_item["news_site"] = "CNN"
 
@@ -200,8 +211,8 @@ class NewsSpiderNPR(scrapy.Spider):
         authors = response.css('p.byline__name > a::text').getall()
         datetime = \
             ' '.join(response.css('time:nth-child(1) span.date::text, span.time::text').getall()) \
-            .removeprefix("Updated ") \
-            .removesuffix(" ET")
+                .removeprefix("Updated ") \
+                .removesuffix(" ET")
 
         datetime = convert_datetime_timezone(datetime, self.npr_date_format, "US/Eastern")
 
