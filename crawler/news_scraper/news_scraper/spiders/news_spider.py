@@ -213,3 +213,66 @@ class NewsSpiderNPR(scrapy.Spider):
         new_item["news_site"] = "NPR"
 
         yield new_item
+
+
+class NewsSpiderAP(scrapy.Spider):
+    name = "ap_spider"
+    domains = "https://apnews.com/"
+    start_urls = [
+        "https://apnews.com/politics",
+        "https://apnews.com/business",
+        "https://apnews.com/health",
+        "https://apnews.com/entertainment",
+        "https://apnews.com/sports"
+    ]
+
+    custom_settings = {
+        "FEEDS": {
+            f"data/ap/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
+        },
+        "ITEM_PIPELINES": {
+            "news_scraper.pipelines.NBCNewsScraperPipeline": 300,
+        }
+    }
+
+    ap_date_format = "%B %d, %Y %I:%M %p"  # %Z"
+
+    def parse(self, response):
+        urls = response.css('h3.PagePromo-title  a::attr(href)').getall()
+        for url in urls:
+            article_url = url
+            yield response.follow(article_url, callback=self.parse_article_page)
+
+    def parse_article_page(self, response):
+        new_item = NewsScraperItem()
+
+        url = response.url
+        if "apnews.com/video" in url:
+            return
+
+        title = response.css('h1::text').get().strip()
+
+        body = ""
+        for i in response.css('div.RichTextStoryBody > p'):
+            # tmp = i.css('h2::text').get("p")
+            # if tmp != "p":
+            #     text = f"<h2>{tmp.strip()}</h2>"
+            # else:
+            text = (''.join(i.xpath('descendant-or-self::text()').extract())).strip()
+            body += text
+
+        authors = ','.join(response.css('div.Page-authors > a::text, div.Page-authors > span::text').getall()).title()
+
+        datetime = response.css("bsp-timestamp::attr(data-timestamp)").get()
+        timestamp = int(datetime) / 1000  # Convert to seconds
+        date = dt.fromtimestamp(timestamp)
+        formatted_date = date.strftime('%Y-%m-%d %H:%M:%S %p') + " EEST"
+
+        new_item["url"] = url
+        new_item["title"] = title
+        new_item["body"] = body
+        new_item["authors"] = authors or "None"
+        new_item["datetime"] = formatted_date
+        new_item["news_site"] = "NPR"
+
+        yield new_item
