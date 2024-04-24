@@ -27,7 +27,7 @@ class NewsSpiderCNN(scrapy.Spider):
         }
     }
 
-    cnn_date_format = "%I:%M %p EDT, %a %B %d, %Y"
+    cnn_date_format = "%I:%M %p, %a %B %d, %Y"
 
     def parse(self, response):
         urls = response.css('div.zone:nth-child(1) a.container__link--type-article:nth-child(1)::attr(href)').getall()
@@ -51,9 +51,13 @@ class NewsSpiderCNN(scrapy.Spider):
             body += text
 
         authors = response.css('span.byline__name::text').getall()
-        datetime = response.css('div.timestamp::text').get().strip().replace("\n", "")
+        datetime = response.css('div.timestamp::text').get() \
+            .strip() \
+            .replace("\n", "") \
+            .replace(" EDT", "") \
+            .removeprefix("Updated        ")
 
-        # helpers.convert_datetime_timezone(datetime, "", "EDT", "EEST")
+        datetime = convert_datetime_timezone(datetime, self.cnn_date_format, "US/Eastern")
 
         new_item["url"] = url
         new_item["title"] = title
