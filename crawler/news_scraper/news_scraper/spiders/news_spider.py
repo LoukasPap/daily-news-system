@@ -168,22 +168,30 @@ class NewsSpiderNPR(scrapy.Spider):
         title = response.css('h1::text').get().strip()
 
         body = ""
-        for i in response.css('div.storytext > p, div.storytext > h3, div.storytext > em'):
-            has_em = i.css('p').get("not em")
-
-            # we check if <p> starts inside immediately with <em> tag
-            if has_em[4:6] == "em":
+        c = 0
+        for i in response.css('div.storytext > p:not(.contributors-text), div.storytext > h3, div.storytext > em'):  #
+            if "You're reading the Consider This" in i.get():
                 continue
-            tmp = i.css('h3.edTag::text').get("p")
-            if tmp != "p":
-                text = f"<h2>{tmp.strip()}</h2>"
-                if None != (strong := i.css('h3.edTag strong::text').get()):
-                    text = text[:-5] + " " + strong + "</h2>"
+
+            not_nested_strong = i.css('h3::text').get("p")
+            has_nested_strong = i.css('h3 > strong::text').get("p")
+            if not_nested_strong != "p" or has_nested_strong != "p":
+
+                if not_nested_strong != "p":
+                    tmp = not_nested_strong
+                    text = f"<h2>{tmp.strip()}</h2>"
+                    print(text)
+                    if None != (strong := i.css('h3.edTag strong::text').get()):
+                        text = text.removesuffix("</h2>") + strong + "</h2>"
+                elif has_nested_strong != "p":
+                    tmp = has_nested_strong
+                    text = f"<h2>{tmp.strip()}</h2>"
+
             else:
                 text = (' '.join(i.xpath('descendant-or-self::text()').extract()))
+
             body += text
-
-
+        print(body)
 
         authors = response.css('p.byline__name > a::text').getall()
         datetime = \
