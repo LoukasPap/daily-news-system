@@ -20,3 +20,4 @@ class NewsScraperItem(scrapy.Item):
     body = scrapy.Field()
     title = scrapy.Field(serializer=lambda x: x.strip())
     datetime = scrapy.Field()
+    news_site = scrapy.Field()

@@ -12,9 +12,11 @@ BOT_NAME = "news_scraper"
 SPIDER_MODULES = ["news_scraper.spiders"]
 NEWSPIDER_MODULE = "news_scraper.spiders"
 
-
+FEEDS = {
+   "data.csv": {"format": "csv"}
+}
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = "news_scraper (+http://www.yourdomain.com)"
+USER_AGENT='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -63,7 +65,7 @@ ROBOTSTXT_OBEY = False
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   "news_scraper.pipelines.NewsScraperPipeline": 300,
+   "news_scraper.pipelines.CNNNewsScraperPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)

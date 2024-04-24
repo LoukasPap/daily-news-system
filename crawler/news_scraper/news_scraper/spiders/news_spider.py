@@ -1,18 +1,33 @@
 import scrapy
+from datetime import datetime as dt
 from news_scraper.items import NewsScraperItem
+from news_scraper.helpers import *
 
 
-class NewsSpider(scrapy.Spider):
+# from news_scraper.news_scraper.helpers import convert_datetime_timezone
+
+
+class NewsSpiderCNN(scrapy.Spider):
     name = "cnn_spider"
     domain = "https://edition.cnn.com"
-    # allowed_domains = [domain]
     start_urls = [
-        # "https://edition.cnn.com/politics",
+        "https://edition.cnn.com/politics",
         "https://edition.cnn.com/business",
-        # "https://edition.cnn.com/health",
-        # "https://edition.cnn.com/entertainment",
-        # "https://edition.cnn.com/sports",
+        "https://edition.cnn.com/health",
+        "https://edition.cnn.com/entertainment",
+        "https://edition.cnn.com/sports",
     ]
+
+    custom_settings = {
+        "FEEDS": {
+            f"data/cnn/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
+        },
+        "ITEM_PIPELINES": {
+            "news_scraper.pipelines.CNNNewsScraperPipeline": 300,
+        }
+    }
+
+    cnn_date_format = "%I:%M %p EDT, %a %B %d, %Y"
 
     def parse(self, response):
         urls = response.css('div.zone:nth-child(1) a.container__link--type-article:nth-child(1)::attr(href)').getall()
@@ -38,10 +53,151 @@ class NewsSpider(scrapy.Spider):
         authors = response.css('span.byline__name::text').getall()
         datetime = response.css('div.timestamp::text').get().strip().replace("\n", "")
 
+        # helpers.convert_datetime_timezone(datetime, "", "EDT", "EEST")
+
         new_item["url"] = url
         new_item["title"] = title
         new_item["body"] = body
         new_item["authors"] = ','.join(authors)
         new_item["datetime"] = datetime
+        new_item["news_site"] = "CNN"
+
+        yield new_item
+
+
+class NewsSpiderNBC(scrapy.Spider):
+    name = "nbc_spider"
+    domains = "https://www.nbcnews.com"
+    start_urls = [
+        "https://www.nbcnews.com/politics",
+        "https://www.nbcnews.com/business",
+        "https://www.nbcnews.com/health",
+        "https://www.nbcnews.com/sports",
+        "https://www.nbcnews.com/culture-matters",
+    ]
+
+    custom_settings = {
+        "FEEDS": {
+            f"data/nbc/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
+        },
+        "ITEM_PIPELINES": {
+            "news_scraper.pipelines.NBCNewsScraperPipeline": 300,
+        }
+    }
+
+    nbc_date_format = "%B %d, %Y, %I:%M %p %Z"
+
+    def parse(self, response):
+        urls = response.css('h2.tease-card__headline > a::attr(href)').getall()
+        urls.extend(response.css('div.package-grid__column:nth-child(1) h2 a::attr(href)').getall())
+        urls.extend(response.css('div.wide-tease-item__info-wrapper > a::attr(href)').getall())
+        for url in urls:
+            article_url = url
+            yield response.follow(article_url, callback=self.parse_article_page)
+
+    def parse_article_page(self, response):
+        new_item = NewsScraperItem()
+
+        url = response.url
+        title = response.css('h1::text').get().strip()
+
+        body = ""
+        for i in response.css(
+                'div.article-body__content > h2, '
+                'div.article-body__content > p, '
+                'div.article-body__content > h2 + div + div > p'):
+
+            tmp = i.css('h2::text').get("p")
+            if tmp != "p":
+                text = f"<h2>{tmp.strip()}</h2>"
+            else:
+                text = (' '.join(i.xpath('descendant-or-self::text()').extract()))
+            body += text
+
+        authors = response.css('section span.byline-name > a::text, section span.byline-name::text').getall()
+        datetime = response.css('time::text').get().strip().replace("\n", "")
+
+        datetime = convert_datetime_timezone(datetime, self.nbc_date_format, "UTC")
+
+        new_item["url"] = url
+        new_item["title"] = title
+        new_item["body"] = body
+        new_item["authors"] = ','.join(authors)
+        new_item["datetime"] = datetime
+        new_item["news_site"] = "NBC"
+
+        yield new_item
+
+
+class NewsSpiderNPR(scrapy.Spider):
+    name = "npr_spider"
+    domains = "https://www.npr.org"
+    start_urls = [
+        "https://www.npr.org/sections/politics/",
+        "https://www.npr.org/sections/business/",
+        "https://www.npr.org/sections/health/",
+        "https://www.npr.org/sections/culture/",
+        "https://www.npr.org/sections/sports/",
+    ]
+
+    custom_settings = {
+        "FEEDS": {
+            f"data/npr/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
+        },
+        "ITEM_PIPELINES": {
+            "news_scraper.pipelines.NBCNewsScraperPipeline": 300,
+        }
+    }
+
+    npr_date_format = "%B %d, %Y %I:%M %p"  # %Z"
+
+    def parse(self, response):
+        urls = response.css('h2.title > a::attr(href)').getall()
+        for url in urls:
+            article_url = url
+            yield response.follow(article_url, callback=self.parse_article_page)
+
+    def parse_article_page(self, response):
+        new_item = NewsScraperItem()
+
+        url = response.url
+        if "org/series" in url:
+            print(url)
+            return
+
+        title = response.css('h1::text').get().strip()
+
+        body = ""
+        for i in response.css('div.storytext > p, div.storytext > h3, div.storytext > em'):
+            has_em = i.css('p').get("not em")
+
+            # we check if <p> starts inside immediately with <em> tag
+            if has_em[4:6] == "em":
+                continue
+            tmp = i.css('h3.edTag::text').get("p")
+            if tmp != "p":
+                text = f"<h2>{tmp.strip()}</h2>"
+                if None != (strong := i.css('h3.edTag strong::text').get()):
+                    text = text[:-5] + " " + strong + "</h2>"
+            else:
+                text = (' '.join(i.xpath('descendant-or-self::text()').extract()))
+            body += text
+
+
+
+        authors = response.css('p.byline__name > a::text').getall()
+        datetime = \
+            ' '.join(response.css('time:nth-child(1) span.date::text, span.time::text').getall()) \
+            .removeprefix("Updated ") \
+            .removesuffix(" ET")
+
+        datetime = convert_datetime_timezone(datetime, self.npr_date_format, "US/Eastern")
+
+        new_item["url"] = url
+        new_item["title"] = title
+        new_item["body"] = body
+        new_item["authors"] = ','.join([a.strip() for a in authors]) if authors else "None"
+        new_item["datetime"] = ''.join(datetime)
+        new_item["news_site"] = "NPR"
 
         yield new_item
