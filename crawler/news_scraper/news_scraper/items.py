@@ -6,18 +6,11 @@
 import scrapy
 
 
-def serialize_title(value):
-    return value.strip()
-
-
-def serialize_datetime(value):
-    return value.strip().replace("\n", "")
-
-
 class NewsScraperItem(scrapy.Item):
     url = scrapy.Field()
     authors = scrapy.Field()
     body = scrapy.Field()
-    title = scrapy.Field(serializer=lambda x: x.strip())
+    title = scrapy.Field()
     datetime = scrapy.Field()
     news_site = scrapy.Field()
+    category = scrapy.Field()

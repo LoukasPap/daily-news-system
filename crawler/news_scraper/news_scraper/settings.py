@@ -64,11 +64,16 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-   "news_scraper.pipelines.DuplicatesPipeline": 300,
-   "news_scraper.pipelines.MongoDBPipeline": 300,
+ITEM_PIPELINES = [
+   # "news_scraper.pipelines.DuplicatesPipeline",
+   # "news_scraper.pipelines.MongoDBPipeline",
+]
 
-}
+MONGODB_URI = "localhost:27017"
+MONGODB_PORT = 27017
+MONGO_DATABASE = "EarlyBird"
+MONGODB_COLLECTION_ARTICLES = "articles"
+MONGODB_COLLECTION_AUTHORS = "authors"
 
 
 

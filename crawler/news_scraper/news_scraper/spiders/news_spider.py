@@ -3,8 +3,7 @@ from datetime import datetime as dt
 from news_scraper.items import NewsScraperItem
 from news_scraper.helpers import *
 import re
-
-# from news_scraper.news_scraper.helpers import convert_datetime_timezone
+from functools import partial
 
 
 class NewsSpiderCNN(scrapy.Spider):
@@ -162,19 +161,24 @@ class NewsSpiderNPR(scrapy.Spider):
         },
         "ITEM_PIPELINES": {
             "news_scraper.pipelines.DuplicatesPipeline": 300,
+            "news_scraper.pipelines.MongoDBPipeline": 300,
         }
     }
 
     npr_date_format = "%B %d, %Y %I:%M %p"  # %Z"
 
     def parse(self, response):
-        print("START URL IS", response.request.meta['redirect_urls'])
-        urls = response.css('h2.title > a::attr(href)').getall()
-        for url in urls[:3]:
-            article_url = url
-            yield response.follow(article_url, callback=self.parse_article_page)
+        category = response.url.removeprefix(self.domains + "/sections/")[:-1]
+        if category == "culture":
+            category = "entertainment"
+        child_page = partial(self.parse_article_page, parent_url=category) # a partial function
 
-    def parse_article_page(self, response):
+        urls = response.css('h2.title > a::attr(href)').getall()
+        for url in urls[:1]:
+            article_url = url
+            yield response.follow(article_url, callback=child_page)
+
+    def parse_article_page(self, response, parent_url):
         new_item = NewsScraperItem()
 
         url = response.url
@@ -224,6 +228,7 @@ class NewsSpiderNPR(scrapy.Spider):
         new_item["authors"] = ','.join([a.strip() for a in authors]) if authors else "None"
         new_item["datetime"] = ''.join(datetime)
         new_item["news_site"] = "NPR"
+        new_item["category"] = parent_url
 
         yield new_item
 
