@@ -23,7 +23,7 @@ class NewsSpiderCNN(scrapy.Spider):
             f"data/cnn/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
         },
         "ITEM_PIPELINES": {
-            "news_scraper.pipelines.CNNNewsScraperPipeline": 300,
+            "news_scraper.pipelines.DuplicatesPipeline": 300,
         }
     }
 
@@ -31,7 +31,7 @@ class NewsSpiderCNN(scrapy.Spider):
 
     def parse(self, response):
         urls = response.css('div.zone:nth-child(1) a.container__link--type-article:nth-child(1)::attr(href)').getall()
-        for url in urls:
+        for url in urls[:3]:
             article_url = self.domain + url
             yield response.follow(article_url, callback=self.parse_article_page)
 
@@ -42,7 +42,7 @@ class NewsSpiderCNN(scrapy.Spider):
         title = response.css('h1.headline__text::text').get().strip()
 
         body = ""
-        for i in response.css('div.article__content > p, div.article__content > h2'):
+        for i in response.css('div.article__content > p:not(.editor-note), div.article__content > h2'):
             tmp = i.css('h2::text').get("p")
             if tmp != "p":
                 text = f"<h2>{tmp.strip()}</h2>"
@@ -96,7 +96,7 @@ class NewsSpiderNBC(scrapy.Spider):
             f"data/nbc/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
         },
         "ITEM_PIPELINES": {
-            "news_scraper.pipelines.NBCNewsScraperPipeline": 300,
+            "news_scraper.pipelines.DuplicatesPipeline": 300,
         }
     }
 
@@ -107,8 +107,9 @@ class NewsSpiderNBC(scrapy.Spider):
         urls.extend(response.css('div.package-grid__column:nth-child(1) h2 a::attr(href)').getall())
         urls.extend(response.css('div.wide-tease-item__info-wrapper > a::attr(href)').getall())
         for url in urls:
-            article_url = url
-            yield response.follow(article_url, callback=self.parse_article_page)
+            if "video" in url:
+                return
+            yield response.follow(url, callback=self.parse_article_page)
 
     def parse_article_page(self, response):
         new_item = NewsScraperItem()
@@ -160,15 +161,16 @@ class NewsSpiderNPR(scrapy.Spider):
             f"data/npr/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
         },
         "ITEM_PIPELINES": {
-            "news_scraper.pipelines.NBCNewsScraperPipeline": 300,
+            "news_scraper.pipelines.DuplicatesPipeline": 300,
         }
     }
 
     npr_date_format = "%B %d, %Y %I:%M %p"  # %Z"
 
     def parse(self, response):
+        print("START URL IS", response.request.meta['redirect_urls'])
         urls = response.css('h2.title > a::attr(href)').getall()
-        for url in urls:
+        for url in urls[:3]:
             article_url = url
             yield response.follow(article_url, callback=self.parse_article_page)
 
@@ -242,7 +244,7 @@ class NewsSpiderAP(scrapy.Spider):
             f"data/ap/news_{dt.today().strftime('%Y-%m-%d')}.csv": {"format": "csv", "overwrite": True}
         },
         "ITEM_PIPELINES": {
-            "news_scraper.pipelines.NBCNewsScraperPipeline": 300,
+            "news_scraper.pipelines.DuplicatesPipeline": 300,
         }
     }
 
@@ -265,10 +267,6 @@ class NewsSpiderAP(scrapy.Spider):
 
         body = ""
         for i in response.css('div.RichTextStoryBody > p'):
-            # tmp = i.css('h2::text').get("p")
-            # if tmp != "p":
-            #     text = f"<h2>{tmp.strip()}</h2>"
-            # else:
             text = (''.join(i.xpath('descendant-or-self::text()').extract())).strip()
             body += text
 
