@@ -18,10 +18,10 @@ class DuplicatesPipeline:
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
-        if adapter["title"] in self.ids_seen:
+        if adapter["url"] in self.ids_seen:
             raise DropItem(f"Duplicate item found: {item!r}")
         else:
-            self.ids_seen.add(adapter["title"])
+            self.ids_seen.add(adapter["url"])
             return item
 
 
@@ -58,4 +58,16 @@ class MongoDBPipeline:
             "new_site": adapter["news_site"],
             "category": adapter["category"]
         })
+
+        for author in adapter["authors"].split(","):
+            self.db[self.authors_collection].update_one(
+                {
+                    "name": author
+                },
+                {
+                    "$addToSet": {"articles": adapter["url"]}
+                },
+                upsert=True
+            )
+
         return item
