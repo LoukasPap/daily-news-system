@@ -8,7 +8,7 @@ from functools import partial
 
 class NewsSpiderCNN(scrapy.Spider):
     name = "cnn_spider"
-    domain = "https://edition.cnn.com"
+    domains = "https://edition.cnn.com"
     start_urls = [
         "https://edition.cnn.com/politics",
         "https://edition.cnn.com/business",
@@ -23,18 +23,22 @@ class NewsSpiderCNN(scrapy.Spider):
         },
         "ITEM_PIPELINES": {
             "news_scraper.pipelines.DuplicatesPipeline": 300,
+            "news_scraper.pipelines.MongoDBPipeline": 300
         }
     }
 
     cnn_date_format = "%I:%M %p, %a %B %d, %Y"
 
     def parse(self, response):
-        urls = response.css('div.zone:nth-child(1) a.container__link--type-article:nth-child(1)::attr(href)').getall()
-        for url in urls[:3]:
-            article_url = self.domain + url
-            yield response.follow(article_url, callback=self.parse_article_page)
+        category = response.url.removeprefix(self.domains + "/")
+        parse_article_page_partial = partial(self.parse_article_page, parent_url=category)  # a partial function
 
-    def parse_article_page(self, response):
+        urls = response.css('div.zone:nth-child(1) a.container__link--type-article:nth-child(1)::attr(href)').getall()
+        for url in urls:
+            article_url = self.domains + url
+            yield response.follow(article_url, callback=parse_article_page_partial)
+
+    def parse_article_page(self, response, parent_url):
         new_item = NewsScraperItem()
 
         url = response.url
@@ -53,10 +57,11 @@ class NewsSpiderCNN(scrapy.Spider):
             [a.strip() \
                  .removeprefix('By') \
                  .removeprefix('Analysis by') \
+                 .removeprefix('Review by') \
                  .removesuffix(" and") \
                  .removesuffix(", CNN")
              for a in
-             response.css('span.byline__name::text, div.byline__names::text').getall()])  # slicing avoids ', CNN'
+             response.css('span.byline__name::text, div.byline__names::text').getall()])
 
         authors = re.sub(',+', ',', authors.removeprefix(',').removesuffix(',').replace('and', '')).strip()
 
@@ -75,6 +80,7 @@ class NewsSpiderCNN(scrapy.Spider):
         new_item["authors"] = authors
         new_item["datetime"] = datetime
         new_item["news_site"] = "CNN"
+        new_item["category"] = parent_url
 
         yield new_item
 
@@ -96,21 +102,27 @@ class NewsSpiderNBC(scrapy.Spider):
         },
         "ITEM_PIPELINES": {
             "news_scraper.pipelines.DuplicatesPipeline": 300,
+            "news_scraper.pipelines.MongoDBPipeline": 300
         }
     }
 
     nbc_date_format = "%B %d, %Y, %I:%M %p %Z"
 
     def parse(self, response):
+        category = response.url.removeprefix(self.domains + "/")
+        if category == "culture-matters":
+            category = "entertainment"
+        parse_article_page_partial = partial(self.parse_article_page, parent_url=category)  # a partial function
+
         urls = response.css('h2.tease-card__headline > a::attr(href)').getall()
         urls.extend(response.css('div.package-grid__column:nth-child(1) h2 a::attr(href)').getall())
         urls.extend(response.css('div.wide-tease-item__info-wrapper > a::attr(href)').getall())
         for url in urls:
-            if "video" in url:
+            if "/videos/" in url:
                 return
-            yield response.follow(url, callback=self.parse_article_page)
+            yield response.follow(url, callback=parse_article_page_partial)
 
-    def parse_article_page(self, response):
+    def parse_article_page(self, response, parent_url):
         new_item = NewsScraperItem()
 
         url = response.url
@@ -137,9 +149,11 @@ class NewsSpiderNBC(scrapy.Spider):
         new_item["url"] = url
         new_item["title"] = title
         new_item["body"] = body
-        new_item["authors"] = ','.join(authors)
+        new_item["authors"] = re.sub("(, CNBC)|(, M.D.)", "", ",".join(authors))
         new_item["datetime"] = datetime
         new_item["news_site"] = "NBC"
+        new_item["category"] = parent_url
+
 
         yield new_item
 
@@ -161,8 +175,9 @@ class NewsSpiderNPR(scrapy.Spider):
         },
         "ITEM_PIPELINES": {
             "news_scraper.pipelines.DuplicatesPipeline": 300,
-            "news_scraper.pipelines.MongoDBPipeline": 300,
+            "news_scraper.pipelines.MongoDBPipeline": 300
         }
+
     }
 
     npr_date_format = "%B %d, %Y %I:%M %p"  # %Z"
@@ -171,12 +186,12 @@ class NewsSpiderNPR(scrapy.Spider):
         category = response.url.removeprefix(self.domains + "/sections/")[:-1]
         if category == "culture":
             category = "entertainment"
-        child_page = partial(self.parse_article_page, parent_url=category) # a partial function
+        parse_article_page_partial = partial(self.parse_article_page, parent_url=category)  # a partial function
 
         urls = response.css('h2.title > a::attr(href)').getall()
-        for url in urls[:1]:
+        for url in urls:
             article_url = url
-            yield response.follow(article_url, callback=child_page)
+            yield response.follow(article_url, callback=parse_article_page_partial)
 
     def parse_article_page(self, response, parent_url):
         new_item = NewsScraperItem()
@@ -250,18 +265,22 @@ class NewsSpiderAP(scrapy.Spider):
         },
         "ITEM_PIPELINES": {
             "news_scraper.pipelines.DuplicatesPipeline": 300,
+            "news_scraper.pipelines.MongoDBPipeline": 300
         }
     }
 
     ap_date_format = "%B %d, %Y %I:%M %p"  # %Z"
 
     def parse(self, response):
+        category = response.url.removeprefix(self.domains)
+        parse_article_page_partial = partial(self.parse_article_page, parent_url=category)  # a partial function
+
         urls = response.css('h3.PagePromo-title  a::attr(href)').getall()
         for url in urls:
             article_url = url
-            yield response.follow(article_url, callback=self.parse_article_page)
+            yield response.follow(article_url, callback=parse_article_page_partial)
 
-    def parse_article_page(self, response):
+    def parse_article_page(self, response, parent_url):
         new_item = NewsScraperItem()
 
         url = response.url
@@ -287,6 +306,7 @@ class NewsSpiderAP(scrapy.Spider):
         new_item["body"] = body
         new_item["authors"] = authors or "None"
         new_item["datetime"] = formatted_date
-        new_item["news_site"] = "NPR"
+        new_item["news_site"] = "AP"
+        new_item["category"] = parent_url
 
         yield new_item

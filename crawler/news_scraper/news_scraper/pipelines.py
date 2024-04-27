@@ -1,10 +1,3 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-
-
-# useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 import re
 from datetime import datetime
@@ -51,7 +44,7 @@ class MongoDBPipeline:
         adapter = ItemAdapter(item)
         self.db[self.articles_collection].insert_one({
             "_id": adapter["url"],
-            "authors": adapter["authors"],
+            "authors": adapter["authors"].split(","),
             "body": adapter["body"],
             "title": adapter["title"],
             "datetime": adapter["datetime"],
