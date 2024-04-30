@@ -42,15 +42,23 @@ class MongoDBPipeline:
 
     def process_item(self, item, spider):
         adapter = ItemAdapter(item)
-        self.db[self.articles_collection].insert_one({
-            "_id": adapter["url"],
-            "authors": adapter["authors"].split(","),
-            "body": adapter["body"],
-            "title": adapter["title"],
-            "datetime": adapter["datetime"],
-            "new_site": adapter["news_site"],
-            "category": adapter["category"]
-        })
+
+        self.db[self.articles_collection].update_one(
+            {
+                "_id": adapter["url"]
+            },
+            {
+                "$set": {
+                    "authors": adapter["authors"].split(","),
+                    "body": adapter["body"],
+                    "title": adapter["title"],
+                    "datetime": adapter["datetime"],
+                    "new_site": adapter["news_site"],
+                    "category": adapter["category"]
+                }
+            },
+            upsert=True
+        )
 
         for author in adapter["authors"].split(","):
             self.db[self.authors_collection].update_one(
