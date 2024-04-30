@@ -118,8 +118,8 @@ class NewsSpiderNBC(scrapy.Spider):
         urls.extend(response.css('div.package-grid__column:nth-child(1) h2 a::attr(href)').getall())
         urls.extend(response.css('div.wide-tease-item__info-wrapper > a::attr(href)').getall())
         for url in urls:
-            if "/videos/" in url:
-                return
+            if "/videos/" in url or "today.com" in url or "/watch/" in url:
+                continue
             yield response.follow(url, callback=parse_article_page_partial)
 
     def parse_article_page(self, response, parent_url):
@@ -188,7 +188,7 @@ class NewsSpiderNPR(scrapy.Spider):
             category = "entertainment"
         parse_article_page_partial = partial(self.parse_article_page, parent_url=category)  # a partial function
 
-        urls = response.css('h2.title > a::attr(href)').getall()
+        urls = response.css('div#overflow h2.title > a::attr(href), article.item:nth-child(1) h2 > a::attr(href)').getall()
         for url in urls:
             article_url = url
             yield response.follow(article_url, callback=parse_article_page_partial)
