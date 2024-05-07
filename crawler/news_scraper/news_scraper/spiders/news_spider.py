@@ -1,5 +1,5 @@
 import scrapy
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 from news_scraper.items import NewsScraperItem
 from news_scraper.helpers import *
 import re
@@ -72,7 +72,9 @@ class NewsSpiderCNN(scrapy.Spider):
             .removeprefix("Updated        ") \
             .removeprefix("Published        ")
 
-        datetime = convert_datetime_timezone(datetime, self.cnn_date_format, "US/Eastern")
+        # datetime = convert_datetime_timezone(datetime, self.cnn_date_format, "US/Eastern")
+        datetime = dt.strptime(datetime, self.npr_date_format)
+        datetime = datetime + timedelta(hours=7)
 
         new_item["url"] = url
         new_item["title"] = title
@@ -145,6 +147,8 @@ class NewsSpiderNBC(scrapy.Spider):
         datetime = response.css('time::text').get().strip().replace("\n", "")
 
         datetime = convert_datetime_timezone(datetime, self.nbc_date_format, "UTC")
+
+        datetime = datetime + timedelta(hours=3)
 
         new_item["url"] = url
         new_item["title"] = title
@@ -235,13 +239,16 @@ class NewsSpiderNPR(scrapy.Spider):
                 .removeprefix("Updated ") \
                 .removesuffix(" ET")
 
-        datetime = convert_datetime_timezone(datetime, self.npr_date_format, "US/Eastern")
+        datetime = dt.strptime(datetime, self.npr_date_format)
+        datetime = datetime + timedelta(hours=7)
+        # datetime = convert_datetime_timezone(datetime, self.npr_date_format, "US/Eastern")
+
 
         new_item["url"] = url
         new_item["title"] = title
         new_item["body"] = body
         new_item["authors"] = ','.join([a.strip() for a in authors]) if authors else "None"
-        new_item["datetime"] = ''.join(datetime)
+        new_item["datetime"] = datetime
         new_item["news_site"] = "NPR"
         new_item["category"] = parent_url
 
@@ -299,13 +306,13 @@ class NewsSpiderAP(scrapy.Spider):
         datetime = response.css("bsp-timestamp::attr(data-timestamp)").get()
         timestamp = int(datetime) / 1000  # Convert to seconds
         date = dt.fromtimestamp(timestamp)
-        formatted_date = date.strftime('%Y-%m-%d %H:%M:%S %p') + " EEST"
+        # formatted_date = date.strftime('%Y-%m-%d %H:%M:%S %p') + " EEST"
 
         new_item["url"] = url
         new_item["title"] = title
         new_item["body"] = body
         new_item["authors"] = authors or "None"
-        new_item["datetime"] = formatted_date
+        new_item["datetime"] = date
         new_item["news_site"] = "AP"
         new_item["category"] = parent_url
 
