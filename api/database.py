@@ -22,12 +22,12 @@ def create_user(user):
 
 
 def authenticate_user(username: str, password: str):
-    user = parse_json(users.find_one({"username": username}))
+    user = users.find_one({"username": username})
     
     if not user:
         return False
 
-    if not pwd_context.verify(password, user.password):
+    if not pwd_context.verify(password, user["password"]):
         return False
     
     return user
@@ -37,6 +37,11 @@ def find_user_by_username(username):
     response = users.find_one({
         "username": username
     })
+    return parse_json(response)
+
+
+def get_feed(filter, category):
+    response = articles.find(limit=40)
     return parse_json(response)
 
 

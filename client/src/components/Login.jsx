@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
@@ -8,6 +8,25 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const verifyToken = async () => {
+      const token = localStorage.getItem("token");
+      console.log(token);
+
+      try {
+        const response = await fetch(`${window.apiIP}/verify-token/${token}`);
+
+        if (response.ok) {
+          throw new Error("Not allowed in login page");
+        }
+      } catch (error) {
+        navigate("/home", { replace: true });
+      }
+    };
+
+    verifyToken();
+  }, []);
 
   const validateForm = () => {
     if (!username || !password) {
@@ -28,7 +47,7 @@ const Login = () => {
     formDetails.append("password", password);
 
     try {
-      const response = await fetch(`${window.myGlobalVariable}/token`, {
+      const response = await fetch(`${window.apiIP}/token`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -41,14 +60,16 @@ const Login = () => {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem("token", data.access_token);
-        navigate("/protected");
+        navigate("/home");
       } else {
+        console.log("NOT OKK");
         const errorData = await response.json();
         setError(errorData.detail || "Authentication failed!");
       }
     } catch (error) {
       setLoading(false);
       setError("An error occured. Please try again later.");
+      console.log("NOT OKK2");
     }
   };
 
@@ -73,9 +94,9 @@ const Login = () => {
         </div>
 
         <button type="submit" disabled={loading}>
-            {loading ? 'Loggin in...' : 'Login'}
+          {loading ? "Loggin in..." : "Login"}
         </button>
-        {error && <p style={{color:'red'}}> {error} </p>}
+        {error && <p style={{ color: "red" }}> {error} </p>}
       </form>
     </div>
   );

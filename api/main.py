@@ -5,6 +5,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
 import database as db
+from typing import List
 
 app = FastAPI()
 
@@ -29,11 +30,42 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
+def verify_token(token: str = Depends(oauth2_sceme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    print("token in", token)
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+       
+        if username is None:
+            raise credentials_exception
+        
+        print("Verified")
+        return payload
+    
+    except JWTError:
+        print("rejected verification")
+        raise credentials_exception
+    
 
-@app.get("/user")
-def read_root():
-    a= db.find_user_by_username("ss")
-    return a
+@app.get("/feed", response_model=List[List[Article]])
+def retrieve_feed(filter: str = "Latest", category: str = "All", current_user: dict = Depends(verify_token)):
+    feed: List = db.get_feed(filter, category)
+    for f in feed:
+        article_dt = f["datetime"]["$date"]
+        dt = datetime.strptime(article_dt, "%Y-%m-%dT%H:%M:%SZ")
+        formatted_time = dt.strftime("%Y-%m-%d %I:%M %p") + " EEST"
+        f["datetime"] = formatted_time
+
+    articles = [Article(**a) for a in feed]
+    splitted_articles = [articles[i:i+10] for i in range(0, len(articles), 10)]
+
+    print("returning")
+    return splitted_articles
 
 
 @app.post("/register")
@@ -48,6 +80,7 @@ def register_user(user: User):
 
 @app.post("/token")
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    print(form_data)
     user = db.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -69,24 +102,20 @@ async def verify_user_token(token: str):
     return {"message": "Valid token"}
 
 
-def verify_token(token: str = Depends(oauth2_sceme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"}
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-       
-        if username is None:
-            raise credentials_exception
-        
-        return payload
-    
-    except JWTError:
-        raise credentials_exception
-    
+
+
+@app.get("/user")
+def read_root(current_user: dict = Depends(verify_token)):
+    user = db.find_user_by_username("kostas")
+    print(user)
+    results = {
+        "id": user["_id"],
+        "username": user["username"],
+        "email": user["email"],
+
+    }
+    return {"data": results}
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()

@@ -10,7 +10,7 @@ const ProtectedPage = () => {
             console.log(token)
 
             try {
-                const response = await fetch(`${window.myGlobalVariable}/verify-token/${token}`);
+                const response = await fetch(`${window.apiIP}/verify-token/${token}`);
 
                 if (!response.ok) {
                     throw new Error('Token verification failed');
@@ -25,7 +25,7 @@ const ProtectedPage = () => {
         verifyToken();
     }, [navigate]);
 
-    return <div> Protected page!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! You are A U T HE N T I C A T E D</div>
+    return <div>You are A U T HE N T I C A T E D</div>
 }
 
 export default ProtectedPage;
