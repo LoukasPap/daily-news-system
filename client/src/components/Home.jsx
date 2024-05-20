@@ -8,17 +8,21 @@ import {
   Flex,
   Text,
   HStack,
+  Alert,
+  AlertIcon,
+  AlertTitle,
 } from "@chakra-ui/react";
 import ArticlesOrder from "./feed/ArticlesOrder";
 import FilterBar from "./feed/FiltersBar";
+import { useLocation } from "react-router-dom";
 
 const Home = ({ onDataFetch, userData }) => {
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(false);
+  const { state } = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     const getFeed = async () => {
       const request = await fetch(`${window.apiIP}/feed`, {
         headers: {
@@ -37,7 +41,7 @@ const Home = ({ onDataFetch, userData }) => {
     getFeed();
   }, []);
 
-  const handleDataFetch = async (data) => {
+  const handleDataFetch = async () => {
     setLoading(true);
 
     try {
@@ -59,11 +63,18 @@ const Home = ({ onDataFetch, userData }) => {
 
   return (
     <>
+      {state && state.error ? (
+        <Alert status="error" justifyContent="center">
+          <AlertIcon />
+          <AlertTitle>{state.error}</AlertTitle>
+        </Alert>
+      ) : null}
       <Box visibility={"hidden"} h={"100px"}></Box>
+
       <Flex justifyContent={"center"}>
         <VStack
           alignItems={"start"}
-          border={"2px black solid"}
+          // border={"2px black solid"}
           w="75%"
           pl="5"
           pr="5"
@@ -82,7 +93,13 @@ const Home = ({ onDataFetch, userData }) => {
                 early <br /> bird
               </Text>
             </Heading>
-            <Text alignSelf="end" mb="5px" fontFamily="Modern No. 20" fontSize="2xl" h="100%">
+            <Text
+              alignSelf="end"
+              mb="5px"
+              fontFamily="Modern No. 20"
+              fontSize="2xl"
+              h="100%"
+            >
               a daily standard
             </Text>
           </Flex>
