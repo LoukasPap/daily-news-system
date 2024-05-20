@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./components/Login";
 import ProtectedPage from "./components/Protected";
 import Home from "./components/Home";
-
+import ArticlePage from "./components/feed/ArticlePage";
 import { Box, Button, Spinner } from "@chakra-ui/react";
 
 // import AuthProvider from "./components/AuthProvider";
@@ -14,7 +14,7 @@ const App = () => {
   const [apiData, setApiData] = useState([]);
   const [token, setToken] = useState([]);
 
-  window.apiIP = "http://localhost:8002";
+  window.apiIP = "http://localhost:8000";
 
   return (
     // <AuthProvider>
@@ -30,6 +30,7 @@ const App = () => {
           path="/home"
           element={<Home onDataFetch={setApiData} userData={apiData} />}
         />
+        <Route path="/article/:id" element={<ArticlePage />} />
       </Routes>
     </Router>
   );
