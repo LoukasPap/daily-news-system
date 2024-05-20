@@ -52,20 +52,36 @@ def verify_token(token: str = Depends(oauth2_sceme)):
         raise credentials_exception
     
 
+def format_to_datetime(article_dt: str):
+    dt = datetime.strptime(article_dt, "%Y-%m-%dT%H:%M:%SZ")
+    formatted_time = dt.strftime("%d/%m/%Y, %I:%M %p") + " EEST"
+    return formatted_time
+
+
 @app.get("/feed", response_model=List[List[Article]])
-def retrieve_feed(filter: str = "Latest", category: str = "All", current_user: dict = Depends(verify_token)):
+def retrieve_feed(filter: str = "latest", category: str = "all", current_user: dict = Depends(verify_token)):
     feed: List = db.get_feed(filter, category)
     for f in feed:
-        article_dt = f["datetime"]["$date"]
-        dt = datetime.strptime(article_dt, "%Y-%m-%dT%H:%M:%SZ")
-        formatted_time = dt.strftime("%Y-%m-%d %I:%M %p") + " EEST"
-        f["datetime"] = formatted_time
+        f["datetime"] = format_to_datetime(f["datetime"]["$date"])
 
     articles = [Article(**a) for a in feed]
     splitted_articles = [articles[i:i+10] for i in range(0, len(articles), 10)]
 
     print("returning")
     return splitted_articles
+
+
+@app.get("/article/{aid}", response_model=Article)
+def retrieve_article(aid: str):
+    response = db.get_article(aid)
+
+    if response:
+        raise HTTPException(status_code=400, detail=f"Did not find article with aid = [{aid}]")
+
+    response["datetime"] = format_to_datetime(response["datetime"]["$date"])
+    
+
+    return Article(response)
 
 
 @app.post("/register")
@@ -80,7 +96,7 @@ def register_user(user: User):
 
 @app.post("/token")
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    print(form_data)
+    print("here", form_data.username)
     user = db.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(

@@ -1,8 +1,9 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, DESCENDING
 import json
 from models import User
 from passlib.context import CryptContext
 from bson import json_util
+from random import shuffle
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -41,7 +42,23 @@ def find_user_by_username(username):
 
 
 def get_feed(filter, category):
-    response = articles.find(limit=40)
+
+    articles_list = []
+    sites = ["AP", "NBC", "CNN", "NPR"]
+    for s in sites:
+        response = articles.find(
+            filter={"new_site": s},
+            limit=10).sort("datetime", DESCENDING)
+            
+        # if filter == "latest":
+            
+        articles_list += parse_json(response)
+    shuffle(articles_list)
+    return articles_list
+
+
+def get_article(aid):
+    response = articles.find_one({"_id": aid})
     return parse_json(response)
 
 
