@@ -12,7 +12,6 @@ const Login = () => {
   useEffect(() => {
     const verifyToken = async () => {
       const token = localStorage.getItem("token");
-      console.log(token);
 
       try {
         const response = await fetch(`${window.apiIP}/verify-token/${token}`);
