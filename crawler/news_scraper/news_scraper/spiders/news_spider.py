@@ -31,6 +31,8 @@ class NewsSpiderCNN(scrapy.Spider):
 
     def parse(self, response):
         category = response.url.removeprefix(self.domains + "/")
+        category = "sports" if category == "sport" else category
+
         parse_article_page_partial = partial(self.parse_article_page, parent_url=category)  # a partial function
 
         urls = response.css('div.zone:nth-child(1) a.container__link--type-article:nth-child(1)::attr(href)').getall()
@@ -73,7 +75,7 @@ class NewsSpiderCNN(scrapy.Spider):
             .removeprefix("Published        ")
 
         # datetime = convert_datetime_timezone(datetime, self.cnn_date_format, "US/Eastern")
-        datetime = dt.strptime(datetime, self.npr_date_format)
+        datetime = dt.strptime(datetime, self.cnn_date_format)
         datetime = datetime + timedelta(hours=7)
 
         new_item["url"] = url
