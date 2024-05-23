@@ -1,7 +1,7 @@
 from pydantic import BaseModel, SkipValidation, Field
 from typing_extensions import Annotated
 import datetime
-from typing import List
+from typing import List, Dict
 
 
 class Article(BaseModel):
@@ -16,10 +16,26 @@ class Article(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
+
+class ArticleHistory(BaseModel):
+    url: str = Field(..., alias="aid")
+    dt: str = Field(default=datetime.datetime.now().replace(microsecond=0), alias="datetime_read")
+    category: str = Field(...)
+
+
 class User(BaseModel):
     username: str
     email: str
     password: str
+    reads_per_category: Dict = Field(default={
+        "sports": 0,
+        "health": 0,
+        "entertainment": 0,
+        "politics": 0,
+        "business": 0
+    })
+    reads_history: List = Field(default=[])
+
 
 class Token(BaseModel):
     access_token: str

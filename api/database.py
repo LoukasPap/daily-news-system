@@ -1,9 +1,10 @@
 from pymongo import MongoClient, DESCENDING
 import json
-from models import User
+from models import User, ArticleHistory
 from passlib.context import CryptContext
 from bson import json_util
 from random import shuffle
+from datetime import datetime
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -12,6 +13,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 client = MongoClient("localhost", 27017)
 db = client["EarlyBird"]
 articles = db["articles"]
+articles_scores = db["articles_scores"]
 authors = db["authors"]
 users = db["users"]
 
@@ -56,6 +58,44 @@ def get_feed(filter, category):
     shuffle(articles_list)
     return articles_list
 
+
+def update_view_history(data: dict, username: str):
+    response = articles.update_one(
+        {
+            "_id": data["aid"]
+        },
+        {
+            "$addToSet": {"read_by": username},
+        },
+
+        upsert=True
+    )
+
+    print("Modified", mod_count := response.modified_count)
+    if mod_count > 0:
+        articles_scores.update_one(
+            {
+                "_id": data["aid"]
+            },
+            {
+                "$inc": {"views": 1},
+
+            })
+        
+        users.update_one(
+            {
+                "username": username
+            },
+            {
+                "$addToSet": {"reads_history": dict(ArticleHistory(aid=data['aid'], category=data['category'])) },
+                "$inc": {"reads_per_category." + data['category'] : 1}
+
+            },
+        )
+    else:
+        print("Already read by this user.")
+
+    return True
 
 def get_article(aid):
     response = articles.find_one({"_id": aid})

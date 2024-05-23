@@ -36,7 +36,7 @@ def verify_token(token: str = Depends(oauth2_sceme)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"}
     )
-    print("token in", token)
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
@@ -67,7 +67,6 @@ def retrieve_feed(filter: str = "latest", category: str = "all", current_user: d
     articles = [Article(**a) for a in feed]
     splitted_articles = [articles[i:i+10] for i in range(0, len(articles), 10)]
 
-    print("returning")
     return splitted_articles
 
 
@@ -114,15 +113,21 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 
 @app.get("/verify-token/{token}")
 async def verify_user_token(token: str):
-    verify_token(token=token)
-    return {"message": "Valid token"}
-
-
+    response = verify_token(token=token)
+    return response
 
 
 @app.get("/user")
 def read_root(current_user: dict = Depends(verify_token)):
-    user = db.find_user_by_username("kostas")
+    user = db.find_user_by_username(current_user["sub"])
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
+    )
+
     print(user)
     results = {
         "id": user["_id"],
@@ -131,6 +136,14 @@ def read_root(current_user: dict = Depends(verify_token)):
 
     }
     return {"data": results}
+
+
+@app.post("/update_views")
+async def update_view(data: dict, current_user: dict = Depends(verify_token)):
+    print("AID", data)
+    db.update_view_history(data, current_user["sub"])
+    print(f"[UPDATE VIEW] {current_user['sub']} VIEWED ARTICLE '{ data['aid'] }'")
+    return "OK"
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
