@@ -21,7 +21,7 @@ class DuplicatesPipeline:
 
 class MongoDBPipeline:
     articles_collection: str = "articles"
-    articles_scores_collection: str = "articles"
+    articles_scores_collection: str = "articles_scores"
     authors_collection: str = "authors"
 
     DECAY_CONSTANT: Final[float] = 0.1
@@ -77,6 +77,9 @@ class MongoDBPipeline:
                     "trend_score": 0, # T score = 0.4 * R + 0.6 * V
                     "views": 0, # V score = views / Vmax, where Vmax are the most likes in a 2weeks period
                     "recency_score": recency_score, # R score = e^(-λ*R), where R=hours passed
+                    "datetime": adapter["datetime"],
+                    "views_score": 0,
+
 
                 }
             },
