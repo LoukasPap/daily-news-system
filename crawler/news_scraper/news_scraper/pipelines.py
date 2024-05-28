@@ -48,7 +48,7 @@ class MongoDBPipeline:
         adapter = ItemAdapter(item)
 
         adapter["datetime"] = adapter["datetime"].replace(microsecond=0)
-
+        
         self.db[self.articles_collection].update_one(
             {
                 "_id": adapter["url"]
@@ -79,8 +79,6 @@ class MongoDBPipeline:
                     "recency_score": recency_score, # R score = e^(-λ*R), where R=hours passed
                     "datetime": adapter["datetime"],
                     "views_score": 0,
-
-
                 }
             },
             upsert=True

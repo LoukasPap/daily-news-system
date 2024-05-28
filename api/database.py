@@ -100,7 +100,7 @@ def update_view_history(data: dict, username: str):
                 })
             
             if record_exists is None:
-                db.settings.update_one(
+                settings.update_one(
                     {"_id": hour_id},
                     {"$push": {
                         "to_update": {
@@ -111,7 +111,7 @@ def update_view_history(data: dict, username: str):
                 )
             
             else:
-                db.settings.update_one(
+                settings.update_one(
                     {"_id": hour_id,
                      "to_update.aid": valid_aid
                      },

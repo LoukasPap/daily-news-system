@@ -128,7 +128,6 @@ def read_root(current_user: dict = Depends(verify_token)):
             headers={"WWW-Authenticate": "Bearer"}
     )
 
-    print(user)
     results = {
         "id": user["_id"],
         "username": user["username"],
@@ -140,7 +139,6 @@ def read_root(current_user: dict = Depends(verify_token)):
 
 @app.post("/update_views")
 async def update_view(data: dict, current_user: dict = Depends(verify_token)):
-    print("AID", data)
     db.update_view_history(data, current_user["sub"])
     print(f"[UPDATE VIEW] {current_user['sub']} VIEWED ARTICLE '{ data['aid'] }'")
     return "OK"
