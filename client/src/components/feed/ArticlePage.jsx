@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, Link as RRLink, useNavigate, redirect } from "react-router-dom";
+import {
+  useLocation,
+  Link as RRLink,
+  useNavigate,
+  redirect,
+} from "react-router-dom";
 import {
   Box,
   Flex,
@@ -11,15 +16,18 @@ import {
   HStack,
   Link,
   IconButton,
-  Button
+  useToast,
 } from "@chakra-ui/react";
 import BranchSVG from "../svg_components/BranchSVG";
+import BranchSVG_clicked from "../svg_components/BranchSVG_clicked";
 import DOMPurify from "dompurify";
 
 const ArticlePage = () => {
   const [username, setUsername] = useState([]);
   const [articleBody, setArticleBody] = useState("");
+  const [liked, setLiked] = useState(false);
 
+  const toast = useToast();
   const { state } = useLocation();
   const navigate = useNavigate();
 
@@ -50,6 +58,9 @@ const ArticlePage = () => {
 
       if (response && response.data) {
         setUsername(response.data.username);
+        const found = response.data.likes.find((element) => element === state.data._id)
+        setLiked(found)
+
       } else {
         console.log("Bad token!");
         navigate("/", { replace: true });
@@ -59,6 +70,25 @@ const ArticlePage = () => {
     getUser();
   }, []);
 
+  const likeArticle = async (username, article_id) => {
+    console.log("like");
+
+    fetch(`${window.apiIP}/like`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username: username, aid: article_id }),
+    })
+      .then((res) => {
+        console.log(`${username} liked article: ${article_id}`);
+        console.log("Like results:", res);
+      })
+      .catch((err) => {
+        throw new Error(err);
+      });
+  };
   return (
     <Box>
       {state && state.data ? "" : ""}
@@ -126,18 +156,29 @@ const ArticlePage = () => {
               alignItems="center"
               mb="2"
             >
-              {/* <Button
-                // isRound={true}
+
+              <IconButton
                 bg="transparent"
-                // border="1px"
-                // borderColor="red.800"
-                // color="white"
-                _hover={{ color: "white"}}
-                leftIcon={<BranchSVG/>}
-                >
-                  Branch it
-              </Button> */}
-                <BranchSVG></BranchSVG>
+                _hover={{ bg: "" }}
+                _active={{ bg: "" }}
+                onClick={() => {
+                  setLiked(!liked);
+                  console.log("clicked");
+                  likeArticle(username, state.data._id);
+                  if (!liked) {
+
+                      toast({
+                        title: "You liked the article",
+                        status: "success",
+                        duration: 3000,
+                        variant: "subtle",
+                        isClosable: true,
+                      });
+                    }
+                  }
+                }
+                icon={liked ? <BranchSVG_clicked /> : <BranchSVG />}
+              />
 
               <Text
                 color="#A7A7A7"

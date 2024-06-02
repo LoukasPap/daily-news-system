@@ -225,6 +225,72 @@ def update_view_history(data: dict, username: str):
 
     return True
 
+
+def like(data: dict):
+    username, article_id = data["username"], data["aid"]
+    print(username, "liked", article_id)
+    isRemoved = users.find_one_and_update(
+        {
+            "username": username,
+            "likes": article_id
+        },
+        {
+            "$pull": {"likes":  article_id},
+
+        },
+    )
+
+    if not isRemoved:
+        users.update_one(
+            {
+                "username": username,
+            },
+            {
+                "$addToSet": {"likes":  article_id},
+
+            })
+    
+        articles.update_one(
+            {
+                "_id": article_id
+            },
+            {
+                "$addToSet": {"liked_by": username},
+            },
+        )
+
+        articles_scores.update_one(
+            {
+                "_id": article_id
+            },
+            {
+                "$inc": {"likes": 1}
+            }
+            )
+
+    else:
+
+        articles.update_one(
+            {
+                "_id": article_id
+            },
+            {
+                "$pull": {"liked_by": username},
+            },
+        )
+       
+        articles_scores.update_one(
+            {
+                "_id": article_id
+            },
+            {
+                "$inc": {"likes": -1}
+            }
+        )
+
+
+    
+
 def get_article(aid):
     response = articles.find_one({"_id": aid})
     return parse_json(response)

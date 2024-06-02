@@ -135,6 +135,7 @@ def read_root(current_user: dict = Depends(verify_token)):
         "id": user["_id"],
         "username": user["username"],
         "email": user["email"],
+        "likes": user["likes"]
 
     }
     return {"data": results}
@@ -157,3 +158,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
+@app.post("/like")
+async def like_article(data: dict, current_user: dict = Depends(verify_token)):
+    db.like(data)
+    return "OK"
