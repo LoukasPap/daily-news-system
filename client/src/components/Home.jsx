@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Heading,
@@ -14,12 +14,17 @@ import {
 } from "@chakra-ui/react";
 import ArticlesOrder from "./feed/ArticlesOrder";
 import FilterBar from "./feed/FiltersBar";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useIsVisible } from "./custom_hooks/useIsVisible";
 
 const Home = ({ onDataFetch, userData }) => {
+  const navigate = useNavigate();
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(false);
   const { state } = useLocation();
+
+  const ref = useRef();
+  const isVisible = useIsVisible(ref);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -32,9 +37,10 @@ const Home = ({ onDataFetch, userData }) => {
 
       const response = await request.json();
 
-      if (response) {
-        console.log(response);
+      if (Array.isArray(response)) {
         setFeed(response);
+      } else {
+        navigate("/");
       }
     };
 
@@ -69,18 +75,18 @@ const Home = ({ onDataFetch, userData }) => {
           <AlertTitle>{state.error}</AlertTitle>
         </Alert>
       ) : null}
-      <Box visibility={"hidden"} h={"100px"}></Box>
+      <Box visibility="hidden" h="100px"></Box>
 
-      <Flex justifyContent={"center"}>
+      <Flex justifyContent="center">
         <VStack
-          alignItems={"start"}
+          alignItems="start"
           // border={"2px black solid"}
           w="75%"
           pl="5"
           pr="5"
           h="100%"
         >
-          <Flex alignItems="baseline">
+          <Flex alignItems="baseline" ref={ref}>
             <Heading
               as={"h1"}
               fontWeight={"400"}
@@ -102,17 +108,16 @@ const Home = ({ onDataFetch, userData }) => {
             >
               a daily standard
             </Text>
-          </Flex>
-
-          <FilterBar />
+          </Flex> 
+          
+          <FilterBar onFeedFetch={setFeed} isHeaderVisible={isVisible ? "true" : "false"}/>
 
           <ArticlesOrder data={feed} />
-
-          <Button mt="5" colorScheme="whatsapp" onClick={handleDataFetch}>
-            Fetch {loading && <Spinner ml="3" size="sm" />}
-          </Button>
         </VStack>
       </Flex>
+      <Text textAlign="center" m="5" w="100%">
+        ©2024 Early Bird Greece, Inc. All rights reserved.
+      </Text>
     </>
   );
 };
