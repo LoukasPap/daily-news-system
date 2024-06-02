@@ -3,7 +3,6 @@ import json
 from models import User, ArticleHistory
 from passlib.context import CryptContext
 from bson import json_util
-from random import shuffle
 from datetime import datetime
 
 
@@ -44,19 +43,103 @@ def find_user_by_username(username):
     return parse_json(response)
 
 
-def get_feed(filter, category):
-
+def get_feed(category, filter):
     articles_list = []
     sites = ["AP", "NBC", "CNN", "NPR"]
-    for s in sites:
-        response = articles.find(
-            filter={"new_site": s},
-            limit=10).sort("datetime", DESCENDING)
-            
-        # if filter == "latest":
-            
-        articles_list += parse_json(response)
-    shuffle(articles_list)
+
+    if category == "latest":
+        pipeline = [
+            {
+                '$sort': {
+                    'datetime': -1
+                }
+            }, {
+                '$group': {
+                    '_id': '$new_site', 
+                    'documents': {
+                        '$push': '$$ROOT'
+                    }
+                }
+            }, {
+                '$project': {
+                    '_id': 1, 
+                    'documents': {
+                        '$slice': [
+                            '$documents', 10
+                        ]
+                    }
+                }
+            }, {
+                '$group': {
+                    '_id': None, 
+                    'allDocuments': {
+                        '$push': '$documents'
+                    }
+                }
+            }, {
+                '$project': {
+                    'allDocuments': {
+                        '$reduce': {
+                            'input': '$allDocuments', 
+                            'initialValue': [], 
+                            'in': {
+                                '$concatArrays': [
+                                    '$$value', '$$this'
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+        
+        print("LATEST PIPELINE")
+        response = articles.aggregate(pipeline)
+        articles_list = parse_json(response)[0]["allDocuments"]
+
+    elif category == "trend":
+        pipeline = [
+            {
+                '$project': {
+                    'trend_score': 1
+                }
+            }, {
+                '$lookup': {
+                    'from': 'articles', 
+                    'localField': '_id', 
+                    'foreignField': '_id', 
+                    'as': 'article'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$article'
+                }
+            }, {
+                '$replaceRoot': {
+                    'newRoot': {
+                        '$mergeObjects': [
+                            '$article', '$$ROOT'
+                        ]
+                    }
+                }
+            }, {
+                '$project': {
+                    'article': 0
+                }
+            }, {
+                '$sort': {
+                    'trend_score': -1
+                }
+            }, {
+                '$limit': 40
+            }
+        ]
+        response = articles_scores.aggregate(pipeline)
+        articles_list = parse_json(response)
+
+    elif category == "personalized":
+        pass
+
     return articles_list
 
 

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi.middleware.cors import CORSMiddleware
 import database as db
 from typing import List
+from random import shuffle
 
 app = FastAPI()
 
@@ -59,8 +60,10 @@ def format_to_datetime(article_dt: str):
 
 
 @app.get("/feed", response_model=List[List[Article]])
-def retrieve_feed(filter: str = "latest", category: str = "all", current_user: dict = Depends(verify_token)):
-    feed: List = db.get_feed(filter, category)
+def retrieve_feed(category: str = "latest", filter: str = "all", current_user: dict = Depends(verify_token)):
+    print(category, filter)
+    feed: List = db.get_feed(category, filter)
+
     for f in feed:
         f["datetime"] = format_to_datetime(f["datetime"]["$date"])
 
