@@ -66,8 +66,7 @@ class MongoDBPipeline:
             upsert=True
         )
         
-        recency_score = e ** (-self.DECAY_CONSTANT * round((datetime.now().replace(microsecond=0) - adapter["datetime"].replace(tzinfo=None)).total_seconds() / 3600) )
-
+        recency_score = e ** (-self.DECAY_CONSTANT * round((datetime.now().replace(microsecond=0) - adapter["datetime"].replace(microsecond=0, tzinfo=None)).total_seconds() / 3600) )
         self.db[self.articles_scores_collection].update_one(
             {
                 "_id": adapter["url"]

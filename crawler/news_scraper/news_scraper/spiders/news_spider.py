@@ -47,8 +47,8 @@ class NewsSpiderCNN(scrapy.Spider):
         title = response.css('h1.headline__text::text').get().strip()
 
         body = ""
-        for i in response.css('div.article__content > p:not(.editor-note), div.article__content > h2'):
-            tmp = i.css('h2::text').get("p")
+        for i in response.css('div.article__content > p:not(.editor-note), div.article__content > h2,  div.article__content > h3.subheader'):
+            tmp = i.css('h2::text').get("p") or i.css('h3::text').get('p')
             if tmp != "p":
                 text = f"<h2>{tmp.strip()}</h2>"
             else:
