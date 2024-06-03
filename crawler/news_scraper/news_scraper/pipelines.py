@@ -5,6 +5,7 @@ import pymongo
 from math import e
 from typing import Final
 import re
+import readtime
 
 class DuplicatesPipeline:
     def __init__(self):
@@ -48,6 +49,7 @@ class MongoDBPipeline:
         adapter = ItemAdapter(item)
 
         adapter["datetime"] = adapter["datetime"].replace(microsecond=0)
+        read_time = readtime.of_text(adapter["body"]).seconds
         
         self.db[self.articles_collection].update_one(
             {
@@ -60,7 +62,8 @@ class MongoDBPipeline:
                     "title": adapter["title"],
                     "datetime": adapter["datetime"],
                     "new_site": adapter["news_site"],
-                    "category": adapter["category"]
+                    "category": adapter["category"],
+                    "reading_time": read_time # in seconds
                 }
             },
             upsert=True
