@@ -1,11 +1,7 @@
-"""
-This script must be executed every night 
-when the site traffic is low to update 
-all the recommendation scores
-"""
-from pymongo import MongoClient, UpdateOne, UpdateMany
+from pymongo import MongoClient, UpdateMany
 import json
 from bson import json_util
+from recommender.helpers import parse_json
 
 client = MongoClient("localhost", 27017)
 db = client["EarlyBird"]
@@ -20,8 +16,6 @@ RECENCY_WEIGHT = 0.6
 VIEWS_WEIGHT = 0.4
 SCORING_HOURS = 5 * 24
 
-def parse_json(data):
-    return json.loads(json_util.dumps(data))
 
 vmax = parse_json(settings.find_one({"_id": "vmax"}))
 
@@ -135,7 +129,6 @@ def update_recency_score():
     
     cursor = articles_scores.aggregate(pipeline)
     parsed_cursos = parse_json(cursor)
-    print("yes")
     print(parsed_cursos)
 
 
@@ -182,10 +175,9 @@ def update_likes_score():
     ]
 
     cursor = articles_scores.aggregate(pipeline)
-    parsed_cursos = parse_json(cursor)
+    parsed_cursor = parse_json(cursor)
     print("yes")
-    print(parsed_cursos)
-
+    print(parsed_cursor)
 
 
 def update_all_scores():
