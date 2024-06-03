@@ -12,7 +12,7 @@ class Article(BaseModel):
     dt: str = Field(..., alias="datetime")
     news_site: str = Field(..., alias="new_site")
     category: str = Field(...)
-    reading_time: int = Field(...)
+    estimated_reading_time: int = Field(...)
 
     class Config:
         arbitrary_types_allowed = True

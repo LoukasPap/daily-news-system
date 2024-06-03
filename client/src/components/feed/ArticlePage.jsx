@@ -113,7 +113,7 @@ const ArticlePage = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ aid: state.data._id, time_spent: timeSpentOnPage, estimated_rt: state.data.reading_time }),
+        body: JSON.stringify({ aid: state.data._id, time_spent: timeSpentOnPage, estimated_rt: state.data.estimated_reading_time }),
       })
         .then((res) => {
           console.log(`Return - Time spent on page: ${timeSpentOnPage} seconds`);
@@ -243,7 +243,7 @@ const ArticlePage = () => {
                 fontWeight="200"
               >
                 {state && state.data
-                  ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${state.data.category} - ${Math.ceil(state.data.reading_time/60) + " mins"}`
+                  ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${state.data.category} - ${Math.ceil(state.data.estimated_reading_time/60) + " mins"}`
                   : ""}
               </Text>
 

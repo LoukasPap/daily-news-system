@@ -63,7 +63,7 @@ class MongoDBPipeline:
                     "datetime": adapter["datetime"],
                     "new_site": adapter["news_site"],
                     "category": adapter["category"],
-                    "reading_time": read_time # in seconds
+                    "estimated_reading_time": read_time # in seconds
                 }
             },
             upsert=True

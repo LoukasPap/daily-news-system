@@ -63,9 +63,9 @@ const ArticleBox = ({ articleData, articleIndex }) => {
         </AvatarGroup>
 
         <Text fontWeight="200" color="#A7A7A7">
-          {Math.ceil(articleData.reading_time / 60) == 0
+          {Math.ceil(articleData.estimated_reading_time / 60) == 0
             ? 1 + " min"
-            : Math.ceil(articleData.reading_time / 60) + " mins"}
+            : Math.ceil(articleData.estimated_reading_time / 60) + " mins"}
         </Text>
       </Flex>
     </Box>
