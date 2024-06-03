@@ -1,6 +1,6 @@
 from pymongo import MongoClient, DESCENDING
 import json
-from models import User, ArticleHistory
+from models import ArticleReadingTime, ArticleHistory
 from passlib.context import CryptContext
 from bson import json_util
 from datetime import datetime
@@ -50,41 +50,41 @@ def get_feed(category, filter):
     if category == "latest":
         pipeline = [
             {
-                '$sort': {
-                    'datetime': -1
+                "$sort": {
+                    "datetime": -1
                 }
             }, {
-                '$group': {
-                    '_id': '$new_site', 
-                    'documents': {
-                        '$push': '$$ROOT'
+                "$group": {
+                    "_id": "$new_site", 
+                    "documents": {
+                        "$push": "$$ROOT"
                     }
                 }
             }, {
-                '$project': {
-                    '_id': 1, 
-                    'documents': {
-                        '$slice': [
-                            '$documents', 10
+                "$project": {
+                    "_id": 1, 
+                    "documents": {
+                        "$slice": [
+                            "$documents", 10
                         ]
                     }
                 }
             }, {
-                '$group': {
-                    '_id': None, 
-                    'allDocuments': {
-                        '$push': '$documents'
+                "$group": {
+                    "_id": None, 
+                    "allDocuments": {
+                        "$push": "$documents"
                     }
                 }
             }, {
-                '$project': {
-                    'allDocuments': {
-                        '$reduce': {
-                            'input': '$allDocuments', 
-                            'initialValue': [], 
-                            'in': {
-                                '$concatArrays': [
-                                    '$$value', '$$this'
+                "$project": {
+                    "allDocuments": {
+                        "$reduce": {
+                            "input": "$allDocuments", 
+                            "initialValue": [], 
+                            "in": {
+                                "$concatArrays": [
+                                    "$$value", "$$this"
                                 ]
                             }
                         }
@@ -100,38 +100,38 @@ def get_feed(category, filter):
     elif category == "trend":
         pipeline = [
             {
-                '$project': {
-                    'trend_score': 1
+                "$project": {
+                    "trend_score": 1
                 }
             }, {
-                '$lookup': {
-                    'from': 'articles', 
-                    'localField': '_id', 
-                    'foreignField': '_id', 
-                    'as': 'article'
+                "$lookup": {
+                    "from": "articles", 
+                    "localField": "_id", 
+                    "foreignField": "_id", 
+                    "as": "article"
                 }
             }, {
-                '$unwind': {
-                    'path': '$article'
+                "$unwind": {
+                    "path": "$article"
                 }
             }, {
-                '$replaceRoot': {
-                    'newRoot': {
-                        '$mergeObjects': [
-                            '$article', '$$ROOT'
+                "$replaceRoot": {
+                    "newRoot": {
+                        "$mergeObjects": [
+                            "$article", "$$ROOT"
                         ]
                     }
                 }
             }, {
-                '$project': {
-                    'article': 0
+                "$project": {
+                    "article": 0
                 }
             }, {
-                '$sort': {
-                    'trend_score': -1
+                "$sort": {
+                    "trend_score": -1
                 }
             }, {
-                '$limit': 40
+                "$limit": 40
             }
         ]
         response = articles_scores.aggregate(pipeline)
@@ -144,7 +144,7 @@ def get_feed(category, filter):
 
 
 def update_view_history(data: dict, username: str):
-    valid_aid = data['aid']
+    valid_aid = data["aid"]
     response = articles.update_one(
         {
             "_id": data["aid"]
@@ -204,11 +204,9 @@ def update_view_history(data: dict, username: str):
                         },
                     })
 
-
-
             print("did not creare time id")
         
-        ah = ArticleHistory(url=data['aid'], category=data['category'])
+        ah = ArticleHistory(url=data["aid"], category=data["category"])
         print("Article History", ah)
         users.update_one(
             {
@@ -289,7 +287,35 @@ def like(data: dict):
         )
 
 
-    
+def add_read_time(data: dict, username: str):
+    aid, read_time, ert = data["aid"], round(data["time_spent"]), data["estimated_rt"]
+    response = users.find_one_and_update(
+        {
+            "username": username,
+            "reading_times.aid": aid
+        },
+        {
+            "$inc": {
+                "reading_times.$.reading_time" : read_time
+            }
+        }
+    )
+
+    if response is None:
+        art = ArticleReadingTime(aid=aid, reading_time=read_time, estimated_rt=ert)
+        print(art)
+        users.update_one(
+            {
+                "username": username,
+            },
+            {
+                "$push": {
+                    "reading_times" : dict(art)
+                }
+            }
+        )
+    print("INSERTED - READ TIME IS", read_time)
+
 
 def get_article(aid):
     response = articles.find_one({"_id": aid})

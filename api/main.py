@@ -163,3 +163,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 async def like_article(data: dict, current_user: dict = Depends(verify_token)):
     db.like(data)
     return "OK"
+
+@app.post("/add_read_time")
+async def add_read_time(data: dict, current_user: dict = Depends(verify_token)):
+    db.add_read_time(data, current_user["sub"])
+    return "OK"
