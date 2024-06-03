@@ -8,17 +8,19 @@ import {
   Avatar,
   Link,
   border,
+  Flex,
 } from "@chakra-ui/react";
 
 const ArticleBox = ({ articleData, articleIndex }) => {
   const sizes = ["lg", "xl", "2xl", "3xl", "4xl"];
+  console.log(articleData);
 
   return (
     <Box
-        id={`article${articleIndex}`}
-        bg="linear-gradient(90deg, #1F1F1F 0%, #353535 100%);"
-        borderRadius="9px"
-        p="15px"
+      id={`article${articleIndex}`}
+      bg="linear-gradient(90deg, #1F1F1F 0%, #353535 80%);"
+      borderRadius="9px"
+      p="15px"
     >
       <Heading>
         <Text
@@ -48,18 +50,24 @@ const ArticleBox = ({ articleData, articleIndex }) => {
         {articleData.category.toUpperCase()}
       </Text>
 
-      {/* <Badge>{articleData.authors.join(", ")}</Badge> */}
+      <Flex justify="space-between" alignItems="baseline">
+        <AvatarGroup size="sm" mt="5" max={2}>
+          {articleData.authors.map((author, index2) => (
+            <Avatar
+              name={author}
+              bg="red.500"
+              color="white"
+              border={"1px solid #F5FFE4"}
+            />
+          ))}
+        </AvatarGroup>
 
-      <AvatarGroup size="sm" mt="5" max={2}>
-        {articleData.authors.map((author, index2) => (
-          <Avatar
-            name={author}
-            bg="red.500"
-            color="white"
-            border={"1px solid #F5FFE4"}
-          />
-        ))}
-      </AvatarGroup>
+        <Text fontWeight="200" color="#A7A7A7">
+          {Math.ceil(articleData.reading_time / 60) == 0
+            ? 1 + " min"
+            : Math.ceil(articleData.reading_time / 60) + " mins"}
+        </Text>
+      </Flex>
     </Box>
   );
 };

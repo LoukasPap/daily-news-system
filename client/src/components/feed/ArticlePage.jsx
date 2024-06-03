@@ -21,6 +21,7 @@ import {
 import BranchSVG from "../svg_components/BranchSVG";
 import BranchSVG_clicked from "../svg_components/BranchSVG_clicked";
 import DOMPurify from "dompurify";
+import TimeMe from "timeme.js";
 
 const ArticlePage = () => {
   const [username, setUsername] = useState([]);
@@ -58,9 +59,10 @@ const ArticlePage = () => {
 
       if (response && response.data) {
         setUsername(response.data.username);
-        const found = response.data.likes.find((element) => element === state.data._id)
-        setLiked(found)
-
+        const found = response.data.likes.find(
+          (element) => element === state.data._id
+        );
+        setLiked(found);
       } else {
         console.log("Bad token!");
         navigate("/", { replace: true });
@@ -68,6 +70,63 @@ const ArticlePage = () => {
     };
 
     getUser();
+  }, []);
+
+  useEffect(() => {
+    // Initialize TimeMe
+    TimeMe.initialize({
+      currentPageName: Math.floor(Math.random() * Date.now()).toString(36), // Optional, name of the page
+      idleTimeoutInSeconds: 30, // Optional, time in seconds before user is considered idle
+    });
+
+    // Start tracking time on page
+    TimeMe.startTimer();
+
+    const handleBeforeUnload = () => {
+      // Stop the timer when the page is about to be unloaded
+      TimeMe.stopTimer();
+
+      // Optionally, you can get the time spent on the page
+      const timeSpentOnPage = TimeMe.getTimeOnCurrentPageInSeconds();
+      console.log(`Unload - Time spent on page: ${timeSpentOnPage} seconds`);
+
+    };
+
+    // Add event listener for beforeunload and unload events
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("unload", handleBeforeUnload);
+
+    return () => {
+      // Cleanup the event listener when the component is unmounted
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("unload", handleBeforeUnload);
+
+      // Stop the timer if the component is unmounted for any reason
+      TimeMe.stopTimer();
+
+      // Optionally, you can get the time spent on the page
+      const timeSpentOnPage = TimeMe.getTimeOnCurrentPageInSeconds();
+
+      fetch(`${window.apiIP}/add_read_time`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ aid: state.data._id, time_spent: timeSpentOnPage, estimated_rt: state.data.reading_time }),
+      })
+        .then((res) => {
+          console.log(`Return - Time spent on page: ${timeSpentOnPage} seconds`);
+          console.log("Like results:", res);
+        })
+        .catch((err) => {
+          throw new Error(err);
+        });
+          console.log(`Return - Time spent on page: ${timeSpentOnPage} seconds`);
+
+
+
+    };
   }, []);
 
   const likeArticle = async (username, article_id) => {
@@ -156,7 +215,6 @@ const ArticlePage = () => {
               alignItems="center"
               mb="2"
             >
-
               <IconButton
                 bg="transparent"
                 _hover={{ bg: "" }}
@@ -166,17 +224,15 @@ const ArticlePage = () => {
                   console.log("clicked");
                   likeArticle(username, state.data._id);
                   if (!liked) {
-
-                      toast({
-                        title: "You liked the article",
-                        status: "success",
-                        duration: 3000,
-                        variant: "subtle",
-                        isClosable: true,
-                      });
-                    }
+                    toast({
+                      title: "You liked the article",
+                      status: "success",
+                      duration: 3000,
+                      variant: "subtle",
+                      isClosable: true,
+                    });
                   }
-                }
+                }}
                 icon={liked ? <BranchSVG_clicked /> : <BranchSVG />}
               />
 
@@ -187,7 +243,7 @@ const ArticlePage = () => {
                 fontWeight="200"
               >
                 {state && state.data
-                  ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${state.data.category}`
+                  ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${state.data.category} - ${Math.ceil(state.data.reading_time/60) + " mins"}`
                   : ""}
               </Text>
 
