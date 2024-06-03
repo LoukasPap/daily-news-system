@@ -12,15 +12,21 @@ class Article(BaseModel):
     dt: str = Field(..., alias="datetime")
     news_site: str = Field(..., alias="new_site")
     category: str = Field(...)
+    reading_time: int = Field(...)
 
     class Config:
         arbitrary_types_allowed = True
 
 
 class ArticleHistory(BaseModel):
-    url: str = Field(..., alias="aid")
+    url: str = Field(...)
     dt: str = Field(default=datetime.datetime.now().replace(microsecond=0), alias="datetime_read")
     category: str = Field(...)
+
+class ArticleReadingTime(BaseModel):
+    aid: str = Field(...)
+    reading_time: int = Field(...)
+    estimated_rt: int = Field(...)
 
 
 class User(BaseModel):
