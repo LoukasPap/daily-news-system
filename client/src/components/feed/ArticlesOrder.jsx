@@ -61,7 +61,7 @@ const ArticlesOrder = ({ data }) => {
         <VStack p="1">
           {articlesArray.map((articleObj, inIndex) => (
             <RRLink
-              to={`/article/${articleObj.title.replace("/","-")}`}
+              to={`/article/${articleObj.title.replaceAll("/","-")}`}
               state={{ data: articleObj }}
               onClick={(e) => updateViewHistory(e, articleObj._id, articleObj.category) }
             >
