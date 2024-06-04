@@ -1,4 +1,4 @@
-from pymongo import MongoClient, DESCENDING
+from pymongo import MongoClient, DESCENDING,  ReturnDocument
 import json
 from models import ArticleReadingTime, ArticleHistory
 from passlib.context import CryptContext
@@ -206,7 +206,7 @@ def update_view_history(data: dict, username: str):
 
             print("did not creare time id")
         
-        ah = ArticleHistory(url=data["aid"], category=data["category"])
+        ah = ArticleHistory(aid=data["aid"], category=data["category"])
         print("Article History", ah)
         users.update_one(
             {
@@ -227,24 +227,55 @@ def update_view_history(data: dict, username: str):
 def like(data: dict):
     username, article_id = data["username"], data["aid"]
     print(username, "liked", article_id)
-    isRemoved = users.find_one_and_update(
+    get_record = users.find_one(
+        {"username": username},
         {
-            "username": username,
-            "likes": article_id
-        },
-        {
-            "$pull": {"likes":  article_id},
-
-        },
+            "reads_history": {
+                "$elemMatch": {"aid": article_id}
+            }
+        }
     )
+    is_liked = parse_json(get_record)["reads_history"][0]["is_liked"]
 
-    if not isRemoved:
+    if is_liked:
+
         users.update_one(
             {
                 "username": username,
+                "reads_history.aid": article_id
             },
             {
-                "$addToSet": {"likes":  article_id},
+                "$set": {"reads_history.$.is_liked":  False},
+
+            },
+        )
+
+        articles.update_one(
+            {
+                "_id": article_id
+            },
+            {
+                "$pull": {"liked_by": username},
+            },
+        )
+       
+        articles_scores.update_one(
+            {
+                "_id": article_id
+            },
+            {
+                "$inc": {"likes": -1}
+            }
+        )
+
+    else:
+        users.update_one(
+            {
+                "username": username,
+                "reads_history.aid": article_id
+            },
+            {
+                "$set": {"reads_history.$.is_liked":  True},
 
             })
     
@@ -266,54 +297,72 @@ def like(data: dict):
             }
             )
 
-    else:
-
-        articles.update_one(
-            {
-                "_id": article_id
-            },
-            {
-                "$pull": {"liked_by": username},
-            },
-        )
-       
-        articles_scores.update_one(
-            {
-                "_id": article_id
-            },
-            {
-                "$inc": {"likes": -1}
-            }
-        )
 
 
 def add_read_time(data: dict, username: str):
     aid, read_time, ert = data["aid"], round(data["time_spent"]), data["estimated_rt"]
-    response = users.find_one_and_update(
+    get_record = users.find_one(
         {
             "username": username,
-            "reading_times.aid": aid
+        "reading_times.aid": aid
         },
         {
-            "$inc": {
-                "reading_times.$.reading_time" : read_time
+            "reading_times": {
+                "$elemMatch": {"aid": aid}
             }
         }
     )
+    
+    if get_record is not None:
+        parsed_record = parse_json(get_record)["reading_times"][0]
 
-    if response is None:
-        art = ArticleReadingTime(aid=aid, reading_time=read_time, estimated_rt=ert)
+        new_rt = parsed_record["reading_time"] + read_time
+        if new_rt >= ert:       
+            users.update_one(
+                {
+                    "username": username,
+                    "reading_times.aid": aid
+                },
+                {
+                    "$set": {
+                        "reading_times.$.reading_time" : new_rt,
+                        "reading_times.$.score" : 1
+                    }
+                },
+            )
+        else:
+            users.update_one(
+                {
+                    "username": username,
+                    "reading_times.aid": aid
+                },
+                {
+                    "$set": {
+                        "reading_times.$.reading_time" : new_rt,
+                        "reading_times.$.score" : new_rt / ert
+                    }
+                },
+            )
+
+
+    else:
+        art = ArticleReadingTime(aid=aid, 
+                                 reading_time=read_time, 
+                                 estimated_rt=ert, 
+                                 score=(read_time/ert if read_time<ert else 1))
         print(art)
         users.update_one(
-            {
+           {
                 "username": username,
             },
             {
                 "$push": {
                     "reading_times" : dict(art)
                 }
-            }
+            },
+            
         )
+    
     print("INSERTED - READ TIME IS", read_time)
 
 

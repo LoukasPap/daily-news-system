@@ -19,14 +19,17 @@ class Article(BaseModel):
 
 
 class ArticleHistory(BaseModel):
-    url: str = Field(...)
+    aid: str = Field(...)
     dt: str = Field(default=datetime.datetime.now().replace(microsecond=0), alias="datetime_read")
     category: str = Field(...)
+    is_liked: bool = Field(default=False)
+
 
 class ArticleReadingTime(BaseModel):
     aid: str = Field(...)
     reading_time: int = Field(...)
     estimated_rt: int = Field(...)
+    score: float = Field(...)
 
 
 class User(BaseModel):
