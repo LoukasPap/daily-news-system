@@ -19,7 +19,7 @@ const ArticlesOrder = ({ data }) => {
         const response = await fetch(`${window.apiIP}/verify-token/${token}`);
 
         if (response.ok) {
-          console.log(response.message)
+          console.log("OK")
           
         }
       } catch (error) {

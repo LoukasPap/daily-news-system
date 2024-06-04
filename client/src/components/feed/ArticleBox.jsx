@@ -13,7 +13,6 @@ import {
 
 const ArticleBox = ({ articleData, articleIndex }) => {
   const sizes = ["lg", "xl", "2xl", "3xl", "4xl"];
-  console.log(articleData);
 
   return (
     <Box
