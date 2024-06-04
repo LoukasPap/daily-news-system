@@ -81,6 +81,8 @@ class MongoDBPipeline:
                     "recency_score": recency_score, # R score = e^(-λ*R), where R=hours passed
                     "datetime": adapter["datetime"],
                     "views_score": 0,
+                    "likes": 0,
+                    "likes_score": 0.0
                 }
             },
             upsert=True
