@@ -59,10 +59,10 @@ const ArticlePage = () => {
 
       if (response && response.data) {
         setUsername(response.data.username);
-        const found = response.data.likes.find(
-          (element) => element === state.data._id
+        const article = response.data.reads_history.find(
+          (element) => element.aid === state.data._id
         );
-        setLiked(found);
+        setLiked(article.is_liked);
       } else {
         console.log("Bad token!");
         navigate("/", { replace: true });

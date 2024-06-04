@@ -135,7 +135,7 @@ def read_root(current_user: dict = Depends(verify_token)):
         "id": user["_id"],
         "username": user["username"],
         "email": user["email"],
-        "likes": user["likes"]
+        "reads_history": user["reads_history"]
 
     }
     return {"data": results}
