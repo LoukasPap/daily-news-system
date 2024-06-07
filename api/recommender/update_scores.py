@@ -1,10 +1,10 @@
 from pymongo import MongoClient, UpdateMany
 import json
 from bson import json_util
-from recommender.helpers import parse_json
+from helpers import parse_json
 
 client = MongoClient("localhost", 27017)
-db = client["EarlyBird"]
+db = client["Test11-full"]
 articles = db["articles"]
 articles_scores = db["articles_scores"]
 authors = db["authors"]
@@ -133,30 +133,13 @@ def update_recency_score():
 
 
 def update_likes_score():
+    max_likes: int = find_max_likes_from_last_n_days(7)
     pipeline = [
         {
-            '$lookup': {
-                'from': 'settings', 
-                'as': 'max_likes', 
-                'pipeline': [
-                    {
-                        '$match': {
-                            '_id': 'max_likes'
-                        }
-                    }
-                ]
-            }
-        }, {
-            '$addFields': {
-                'max_likes': {
-                    '$first': '$max_likes.value'
-                }
-            }
-        }, {
             '$addFields': {
                 'likes_score': {
                     '$divide': [
-                        '$likes', '$max_likes'
+                        '$likes', max_likes
                     ]
                 }
             }
@@ -175,9 +158,6 @@ def update_likes_score():
     ]
 
     cursor = articles_scores.aggregate(pipeline)
-    parsed_cursor = parse_json(cursor)
-    print("yes")
-    print(parsed_cursor)
 
 
 def update_all_scores():
@@ -255,6 +235,47 @@ def update_all_scores():
         }
     }
 ])
+
+
+def find_max_likes_from_last_n_days(days: int):
+    pipeline = [
+        {
+            '$addFields': {
+                'dateDifference': {
+                    '$abs': {
+                        '$dateDiff': {
+                            'startDate': '$datetime', 
+                            'endDate': '$$NOW', 
+                            'unit': 'hour', 
+                            'timezone': '+07', 
+                            'startOfWeek': 'mon'
+                        }
+                    }
+                }
+            }
+        }, {
+            '$match': {
+                'dateDifference': {
+                    '$lte': days*24
+                }
+            }
+        }, {
+            '$sort': {
+                'likes': -1
+            }
+        }, {
+            '$limit': 1
+        }, {
+            '$project': {
+                '_id': 0, 
+                'likes': 1
+            }
+        }
+    ]
+
+    response = articles_scores.aggregate(pipeline)
+    return parse_json(response)[0]["likes"]
+
 
 # uncomment and execute
 # update_views_score()
