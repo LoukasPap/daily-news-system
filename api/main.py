@@ -62,7 +62,7 @@ def format_to_datetime(article_dt: str):
 @app.get("/feed", response_model=List[List[Article]])
 def retrieve_feed(category: str = "latest", filter: str = "all", current_user: dict = Depends(verify_token)):
     print(category, filter)
-    feed: List = db.get_feed(category, filter)
+    feed: List = db.get_feed(category, filter, current_user["sub"])
 
     for f in feed:
         f["datetime"] = format_to_datetime(f["datetime"]["$date"])

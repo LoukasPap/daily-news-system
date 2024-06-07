@@ -10,12 +10,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 client = MongoClient("localhost", 27017)
-db = client["EarlyBird"]
+db = client["Test11-full"]
 articles = db["articles"]
 articles_scores = db["articles_scores"]
 authors = db["authors"]
 settings = db["settings"]
 users = db["users"]
+users_recommendations = db["users_recommendations"]
 
 
 def create_user(user):
@@ -43,7 +44,7 @@ def find_user_by_username(username):
     return parse_json(response)
 
 
-def get_feed(category, filter):
+def get_feed(category, filter, username):
     articles_list = []
     sites = ["AP", "NBC", "CNN", "NPR"]
 
@@ -134,11 +135,73 @@ def get_feed(category, filter):
                 "$limit": 40
             }
         ]
+
         response = articles_scores.aggregate(pipeline)
         articles_list = parse_json(response)
 
     elif category == "personalized":
-        pass
+        pipeline = [
+            {
+                '$match': {
+                    'username': username
+                }
+            }, {
+                '$unwind': {
+                    'path': '$recommendations'
+                }
+            }, {
+                '$replaceRoot': {
+                    'newRoot': {
+                        '$mergeObjects': [
+                            '$recommendations', '$$ROOT'
+                        ]
+                    }
+                }
+            }, {
+                '$project': {
+                    '_id': 0, 
+                    'recommendations': 0
+                }
+            }, {
+                '$lookup': {
+                    'from': 'articles', 
+                    'localField': 'aid', 
+                    'foreignField': '_id', 
+                    'as': 'joined'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$joined'
+                }
+            }, {
+                '$replaceRoot': {
+                    'newRoot': {
+                        '$mergeObjects': [
+                            '$joined', '$$ROOT'
+                        ]
+                    }
+                }
+            }, {
+                '$project': {
+                    'aid': 0, 
+                    'username': 0, 
+                    'joined': 0
+                }
+            }, {
+                '$sort': {
+                    'score': -1
+                }
+            }, {
+                '$limit': 40
+            }, {
+                '$project': {
+                    'score': 0
+                }
+            }
+        ]
+        
+        response = users_recommendations.aggregate(pipeline)
+        articles_list = parse_json(response)
 
     return articles_list
 
