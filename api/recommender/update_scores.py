@@ -19,14 +19,14 @@ SCORING_HOURS = 5 * 24
 
 vmax = parse_json(settings.find_one({"_id": "vmax"}))
 
-def update_views_score():
+def update_views():
+    max_views = find_max_views_from_last_n_days(7)
 
     not_updated_views = settings.find(
         {"updated": False},
     )
 
     for update_date in not_updated_views:
-        print("in")
         requests: list = []
         for ud in update_date['to_update']:
             requests.append(
@@ -37,7 +37,6 @@ def update_views_score():
                     {
                         "$inc": {
                             "views": ud["new_views"], 
-                            "views_score": ud["new_views"]/vmax["value"]
                         },
                     }
                 )
@@ -130,6 +129,30 @@ def update_recency_score():
     cursor = articles_scores.aggregate(pipeline)
     parsed_cursos = parse_json(cursor)
     print(parsed_cursos)
+
+
+def update_views_score():
+    max_views: int = find_max_likes_from_last_n_days(7)
+    pipeline = [
+        {
+            '$addFields': {
+                'views_score': {
+                    '$divide': [
+                        '$views', max_views
+                    ]
+                }
+            }
+        }, {
+            '$merge': {
+                'into': 'articles_scores', 
+                'on': '_id', 
+                'whenMatched': 'merge', 
+                'whenNotMatched': 'discard'
+            }
+        }
+    ]
+
+    articles_scores.aggregate(pipeline)
 
 
 def update_likes_score():
@@ -275,6 +298,46 @@ def find_max_likes_from_last_n_days(days: int):
 
     response = articles_scores.aggregate(pipeline)
     return parse_json(response)[0]["likes"]
+
+
+def find_max_views_from_last_n_days(days: int):
+    pipeline = [
+        {
+            '$addFields': {
+                'dateDifference': {
+                    '$abs': {
+                        '$dateDiff': {
+                            'startDate': '$datetime', 
+                            'endDate': '$$NOW', 
+                            'unit': 'hour', 
+                            'timezone': '+07', 
+                            'startOfWeek': 'mon'
+                        }
+                    }
+                }
+            }
+        }, {
+            '$match': {
+                'dateDifference': {
+                    '$lte': days * 24
+                }
+            }
+        }, {
+            '$sort': {
+                'views': -1
+            }
+        }, {
+            '$limit': 1
+        }, {
+            '$project': {
+                '_id': 0, 
+                'views': 1
+            }
+        }
+    ]
+
+    response = articles_scores.aggregate(pipeline)
+    return parse_json(response)[0]["views"]
 
 
 # uncomment and execute
