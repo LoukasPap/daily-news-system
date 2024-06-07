@@ -20,8 +20,6 @@ SCORING_HOURS = 5 * 24
 vmax = parse_json(settings.find_one({"_id": "vmax"}))
 
 def update_views():
-    max_views = find_max_views_from_last_n_days(7)
-
     not_updated_views = settings.find(
         {"updated": False},
     )
@@ -132,7 +130,7 @@ def update_recency_score():
 
 
 def update_views_score():
-    max_views: int = find_max_likes_from_last_n_days(7)
+    max_views: int = find_max_views_from_last_n_days(7)
     pipeline = [
         {
             '$addFields': {
@@ -167,10 +165,6 @@ def update_likes_score():
                 }
             }
         }, {
-            '$project': {
-                'max_likes': 0
-            }
-        }, {
             '$merge': {
                 'into': 'articles_scores', 
                 'on': '_id', 
@@ -180,7 +174,7 @@ def update_likes_score():
         }
     ]
 
-    cursor = articles_scores.aggregate(pipeline)
+    articles_scores.aggregate(pipeline)
 
 
 def update_all_scores():
@@ -343,5 +337,5 @@ def find_max_views_from_last_n_days(days: int):
 # uncomment and execute
 # update_views_score()
 # update_recency_score()
-update_likes_score()
+# update_likes_score()
 
