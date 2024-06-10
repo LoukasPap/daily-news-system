@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Early Bird",
+  "name": "A daily news web application",
   "icons": [
     {
       "src": "favicon.ico",
