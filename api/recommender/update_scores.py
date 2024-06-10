@@ -71,21 +71,6 @@ def update_recency_score():
                 }
             }
         }, {
-            '$lookup': {
-                'from': 'settings', 
-                'as': 'vmax', 
-                'localField': '1', 
-                'foreignField': '1'
-            }
-        }, {
-            '$addFields': {
-                'vmax': {
-                    '$arrayElemAt': [
-                        '$vmax.value', 0
-                    ]
-                }
-            }
-        }, {
             '$addFields': {
                 'recency_score': {
                     '$sum': [
@@ -102,7 +87,7 @@ def update_recency_score():
                                                 'startOfWeek': 'mon'
                                             }
                                         }
-                                    }, -0.1
+                                    }, DECAY_CONSTANT
                                 ]
                             }
                         }
@@ -111,7 +96,6 @@ def update_recency_score():
             }
         }, {
             '$project': {
-                'vmax': 0, 
                 'dateDifference': 0
             }
         }, {
