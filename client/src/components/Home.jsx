@@ -4,21 +4,30 @@ import {
   Heading,
   VStack,
   Button,
-  Spinner,
+  Avatar,
   Flex,
   Text,
   HStack,
   Alert,
   AlertIcon,
   AlertTitle,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverHeader,
+  PopoverBody,
+  PopoverCloseButton,
+  Portal,
 } from "@chakra-ui/react";
 import ArticlesOrder from "./feed/ArticlesOrder";
 import FilterBar from "./feed/FiltersBar";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useIsVisible } from "./custom_hooks/useIsVisible";
 
-const Home = ({ onDataFetch, userData }) => {
+const Home = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState([]);
+  const [email, setEmail] = useState([]);
   const [feed, setFeed] = useState([]);
   const [loading, setLoading] = useState(false);
   const { state } = useLocation();
@@ -47,24 +56,30 @@ const Home = ({ onDataFetch, userData }) => {
     getFeed();
   }, []);
 
-  const handleDataFetch = async () => {
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${window.apiIP}/user`, {
+  useEffect(() => {
+    const getUser = async () => {
+      const request = await fetch(`${window.apiIP}/user`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+      const response = await request.json();
 
-      const responseData = await response.json();
-      console.log(responseData.data);
-      onDataFetch(responseData.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    } finally {
-      setLoading(false);
-    }
+      if (response && response.data) {
+        setUsername(response.data.username);
+        setEmail(response.data.email);
+      } else {
+        console.log("Bad token!");
+        navigate("/", { replace: true });
+      }
+    };
+
+    getUser();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate("/", { replace: true });
   };
 
   return (
@@ -86,31 +101,72 @@ const Home = ({ onDataFetch, userData }) => {
           pr="5"
           h="100%"
         >
-          <Flex alignItems="baseline" ref={ref}>
-            <Heading
-              as={"h1"}
-              fontWeight={"400"}
-              fontStyle={"normal"}
-              fontSize={"5em"}
-              color="#FF3131"
-              alignSelf="end"
-            >
-              <Text alignSelf="end" h="100%">
-                early <br /> bird
+          <Flex w="100%" alignItems="end" justify="space-between" ref={ref}>
+            <Flex>
+              <Heading
+                as={"h1"}
+                fontWeight={"400"}
+                fontStyle={"normal"}
+                fontSize={"5em"}
+                color="#FF3131"
+                alignSelf="end"
+              >
+                <Text alignSelf="end" h="100%">
+                  early <br /> bird
+                </Text>
+              </Heading>
+              <Text
+                alignSelf="end"
+                mb="5px"
+                fontFamily="Modern No. 20"
+                fontSize="2xl"
+                h="100%"
+              >
+                a daily standard
               </Text>
-            </Heading>
-            <Text
-              alignSelf="end"
-              mb="5px"
-              fontFamily="Modern No. 20"
-              fontSize="2xl"
-              h="100%"
-            >
-              a daily standard
-            </Text>
-          </Flex> 
-          
-          <FilterBar onFeedFetch={setFeed} isHeaderVisible={isVisible ? "true" : "false"}/>
+            </Flex>
+
+            <HStack mr="5">
+              <Popover placement="start">
+                <PopoverTrigger>
+                  <Avatar
+                    _hover={{ opacity: "80%" }}
+                    border="1px solid black"
+                    p="0.5"
+                    h="80px"
+                    size="lg"
+                    src="https://bit.ly/code-beast"
+                  />
+                </PopoverTrigger>
+                <Portal>
+                  <PopoverContent border="1px solid black">
+                    <PopoverHeader>
+                      {" "}
+                      {username && username != " ff" ? username : "-:-"} -{" "}
+                      {email && email != " ff" ? email : "-:-"}
+                    </PopoverHeader>
+                    <PopoverCloseButton color="black" />
+                    <PopoverBody borderTop="1px solid black">
+                      Do you want to logout?{" "}
+                      <Button
+                        ml="3"
+                        colorScheme="red"
+                        onClick={(e) => handleLogout()}
+                      >
+                        Logout
+                      </Button>
+                    </PopoverBody>
+                  </PopoverContent>
+                </Portal>
+              </Popover>
+              <Text fontSize="xl" textAlign="end"></Text>
+            </HStack>
+          </Flex>
+
+          <FilterBar
+            onFeedFetch={setFeed}
+            isHeaderVisible={isVisible ? "true" : "false"}
+          />
 
           <ArticlesOrder data={feed} />
         </VStack>
