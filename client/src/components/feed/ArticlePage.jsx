@@ -123,9 +123,6 @@ const ArticlePage = () => {
           throw new Error(err);
         });
           console.log(`Return - Time spent on page: ${timeSpentOnPage} seconds`);
-
-
-
     };
   }, []);
 

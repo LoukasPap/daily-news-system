@@ -93,54 +93,6 @@ const FilterBar = ({ onFeedFetch, isHeaderVisible }) => {
       </TabList>
     </Tabs>
 
-    // <Button
-    //   w="140px"
-    //   p="2"
-    //   borderRadius="10px"
-    //   border="2px dashed #303030"
-    //   bg="transparent"
-    //   textAlign="center"
-    //   fontSize="lg"
-    //   fontWeight="400"
-    //   color="#303030"
-    //   // isActive="true"
-    //   _hover={{ bg: "#BAC6A8" }}
-    //   _focus={{ bg: "#303030", color: "#FFF" }}
-    //   onClick={(e) => getFeed(e, "latest")}
-    // >
-    //   Latest
-    // </Button>
-    // <Button
-    //   w="140px"
-    //   p="2"
-    //   borderRadius="10px"
-    //   border="2px dashed #303030"
-    //   bg="transparent"
-    //   textAlign="center"
-    //   fontSize="lg"
-    //   fontWeight="400"
-    //   color="#303030"
-    //   _hover={{ bg: "#BAC6A8" }}
-    //   _active={{ bg: "#303030", color: "#FFF" }}
-    // >
-    //   Trends
-    // </Button>
-    // <Button
-    //   w="140px"
-    //   p="2"
-    //   borderRadius="10px"
-    //   border="2px dashed #303030"
-    //   bg="transparent"
-    //   textAlign="center"
-    //   fontSize="lg"
-    //   fontWeight="400"
-    //   color="#303030"
-    //   _hover={{ bg: "#BAC6A8" }}
-    //   _active={{ bg: "#303030", color: "#FFF" }}
-    // >
-    //   Personalized
-    // </Button>
-    // </HStack>
   );
 };
 
