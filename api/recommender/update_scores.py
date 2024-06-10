@@ -2,6 +2,7 @@ from pymongo import MongoClient, UpdateMany
 import json
 from bson import json_util
 from helpers import parse_json
+from find_recommendations import main
 
 client = MongoClient("localhost", 27017)
 db = client["Test11-full"]
@@ -10,6 +11,7 @@ articles_scores = db["articles_scores"]
 authors = db["authors"]
 settings = db["settings"]
 users = db["users"]
+users_recs = db["users_recommendations"]
 
 DECAY_CONSTANT = -0.1
 RECENCY_WEIGHT = 0.6
@@ -159,6 +161,35 @@ def update_likes_score():
     ]
 
     articles_scores.aggregate(pipeline)
+
+
+def generate_recommendation_scores():
+    response = users.aggregate([
+        {
+            '$addFields': {
+                'total_read': {
+                    '$size': '$reads_history'
+                }
+            }
+        }, {
+            '$match': {
+                'total_read': {
+                    '$gt': 100
+                }
+            }
+        }
+    ])
+
+    for u in parse_json(response):
+        res = users_recs.find_one({"username": u["username"]})
+        if res is None:
+            main(u["username"])
+            print("Generated recommendations for", u["username"])
+
+        else:
+            print(u["username"], "has already recommendations!")
+
+
 
 
 def update_all_scores():
@@ -322,4 +353,4 @@ def find_max_views_from_last_n_days(days: int):
 # update_views_score()
 # update_recency_score()
 # update_likes_score()
-
+generate_recommendation_scores()

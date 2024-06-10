@@ -80,7 +80,6 @@ def find_last_100_categories_of_user(username: str, users_collection):
 
 
 def take_last_100_categories_of_user(username: str, users_collection):
-    print("problem is with", username)
     pipeline = [
         {
             '$match': {

@@ -18,13 +18,12 @@ recommendations_cl = db["users_recommendations"]
 all_users_similarities: dict = {}
 all_items_scores: dict = {}
 
-def main():
-    user: str = "carl"
-    recs = find_recommendations(user)
+def main(username):
+    recs = find_recommendations(username)
 
     sorted_recs = [{"aid":r, "score":s} for r, s in recs.items()]
     recommendations_cl.update_one(
-        {"username": user},
+        {"username": username},
         {
             "$set": {
                 "recommendations": sorted_recs
@@ -55,7 +54,6 @@ def find_recommendations(username):
 
     return top_n_recommendations
         
-
 
 def find_similar_users(username: str, item_id: str, user_categories: dict, other_readers: list, n: int):
     similar_users = {}
@@ -104,7 +102,6 @@ def user_to_user(username, item_id, neighbors, users_cl):
     return numerator / denominator
         
 
-
 def find_cosine_sim(u_cat, r_cat):
     list_u = [u_cat["health"], u_cat["entertainment"], u_cat["sports"], u_cat["politics"], u_cat["business"]]
     list_r = [r_cat["health"], r_cat["entertainment"], r_cat["sports"], r_cat["politics"], r_cat["business"]]
@@ -116,6 +113,3 @@ def find_cosine_sim(u_cat, r_cat):
     cosine_score = np.dot(vector_u, vector_v) / (norm(vector_u) * norm(vector_v))
 
     return cosine_score
-
-
-main()
