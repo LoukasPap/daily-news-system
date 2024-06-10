@@ -1,12 +1,11 @@
 from models import *
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
-from fastapi.middleware.cors import CORSMiddleware
 import database as db
-from typing import List
-from random import shuffle
+from typing import List, Annotated
 
 app = FastAPI()
 
@@ -86,6 +85,19 @@ def retrieve_article(aid: str):
     return Article(response)
 
 
+@app.post("/register-user")
+def register_user_by_form(username: Annotated[str, Form()], 
+                          password: Annotated[str, Form()], 
+                          email: Annotated[str, Form()]):
+    user: User = User(username=username,email=email,password=password)
+    db_user = db.find_user_by_username(user.username)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username already registered!")
+    
+    db.create_user(user)
+    return {"Registered": "OK!"}
+
+
 @app.post("/register")
 def register_user(user: User):
     db_user = db.find_user_by_username(user.username)
@@ -98,7 +110,6 @@ def register_user(user: User):
 
 @app.post("/token")
 def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    print("here", form_data.username)
     user = db.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
