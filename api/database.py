@@ -140,6 +140,28 @@ def get_feed(category, filter, username):
         articles_list = parse_json(response)
 
     elif category == "personalized":
+        unparsed_res = users.aggregate([
+            {
+                '$match': {
+                    'username': username
+                }
+            }, {
+                '$project': {
+                    'unique_articles': {
+                        '$size': '$reads_history'
+                    }, 
+                    '_id': 0
+                }
+            }
+        ])
+
+        total_articles = parse_json(unparsed_res)[0]["unique_articles"]
+        if (total_articles < 100):
+            print("Not enought articles")
+            return "Not enought articles"
+        
+        
+
         pipeline = [
             {
                 '$match': {
