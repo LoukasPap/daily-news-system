@@ -231,8 +231,8 @@ const Login = () => {
       </Box>
 
       <Box position="relative" padding="10">
-        <Divider orientation="horizontal" bg="black" w="40" variant="dashed" />{" "}
-        <AbsoluteCenter bg="black" color="white" px="4">
+        <Divider orientation="horizontal" bg="black" w="40" variant="dashed" />
+        <AbsoluteCenter bg="#353535" color="white" px="4">
           or
         </AbsoluteCenter>
       </Box>
@@ -302,7 +302,7 @@ const Login = () => {
                 borderRadius="0"
                 pr="4.5rem"
                 type={show ? "text" : "password"}
-                placeholder="Enter password"
+                placeholder="Re-enter password"
                 value={passwordVerification}
                 onChange={(e) =>
                   setPasswordVerification(e.target.value)
@@ -315,7 +315,7 @@ const Login = () => {
                   borderRadius="0"
                   onClick={handleClick}
                 >
-                  {show ? "Hide" : "Show"}
+                  {show ? "😲" : "🤐"}
                 </Button>
               </InputRightElement>
             </InputGroup>
@@ -325,6 +325,7 @@ const Login = () => {
               _focus={{ bg: "#353535", color: "white" }}
               mt="5"
               variant="outline"
+              // bg="white"
               colorScheme="black"
               type="submit"
               disabled={loading}
