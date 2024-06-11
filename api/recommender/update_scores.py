@@ -16,11 +16,10 @@ users_recs = db["users_recommendations"]
 
 DECAY_CONSTANT = -0.1
 RECENCY_WEIGHT = 0.6
-VIEWS_WEIGHT = 0.4
+LIKES_WEIGHT = 0.3
+VIEWS_WEIGHT = 0.1
 SCORING_HOURS = 5 * 24
 
-
-vmax = parse_json(settings.find_one({"_id": "vmax"}))
 
 def update_views():
     not_updated_views = settings.find(
@@ -195,81 +194,46 @@ def generate_recommendation_scores():
             print(u["username"], "has already recommendations!")
 
 
-def update_all_scores():
-    all_scores = articles_scores.aggregate([
-     {
-        '$lookup': {
-            'from': 'settings', 
-            'as': 'vmax', 
-            'pipeline': [
-                {
-                    '$project': {
-                        'value': 1, 
-                        '_id': 0
-                    }
+def update_trend_score():
+    d = datetime.today() - timedelta(days=7)
+    pipeline = [
+        {
+            '$match': {
+                'datetime': {
+                    '$gt': d
                 }
-            ]
-        }
-    }, {
-        '$addFields': {
-            'vmax': {
-                '$arrayElemAt': [
-                    '$vmax.value', 0
-                ]
             }
-        }
-    }, {
-        '$addFields': {
-            'recency_score': {
-                '$sum': [
-                    {
-                        '$exp': {
+        }, {
+            '$addFields': {
+                'trend_score': {
+                    '$sum': [
+                        {
                             '$multiply': [
-                                {
-                                    '$dateDiff': {
-                                        'startDate': '$datetime', 
-                                        'endDate': '$$NOW', 
-                                        'unit': 'hour', 
-                                        'timezone': '+07', 
-                                        'startOfWeek': 'mon'
-                                    }
-                                }, DECAY_CONSTANT
+                                '$recency_score', 0.6
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$likes_score', 0.3
+                            ]
+                        }, {
+                            '$multiply': [
+                                '$views_score', 0.1
                             ]
                         }
-                    }
-                ]
+                    ]
+                }
+            }
+        }, {
+            '$merge': {
+                'into': 'articles_scores', 
+                'on': '_id', 
+                'whenMatched': 'merge', 
+                'whenNotMatched': 'discard'
             }
         }
-    }, {
-        '$addFields': {
-            'views_score': {
-                '$divide': [
-                    '$views', '$vmax'
-                ]
-            }
-        }
-    }, {
-        '$addFields': {
-            'trend_score': {
-                '$sum': [
-                    {
-                        '$multiply': [
-                            '$recency_score', RECENCY_WEIGHT
-                        ]
-                    }, {
-                        '$multiply': [
-                            '$views_score', VIEWS_WEIGHT
-                        ]
-                    }
-                ]
-            }
-        }
-    }, {
-        '$project': {
-            'vmax': 0
-        }
-    }
-])
+    ]
+
+    articles_scores.aggregate(pipeline)
 
 
 def find_max_likes_from_last_n_days(days: int):
@@ -357,4 +321,5 @@ def find_max_views_from_last_n_days(days: int):
 # update_views()
 # update_recency_score()
 # update_likes_score()
+update_trend_score()
 # generate_recommendation_scores()
