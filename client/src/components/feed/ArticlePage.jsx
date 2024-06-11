@@ -89,7 +89,6 @@ const ArticlePage = () => {
       // Optionally, you can get the time spent on the page
       const timeSpentOnPage = TimeMe.getTimeOnCurrentPageInSeconds();
       console.log(`Unload - Time spent on page: ${timeSpentOnPage} seconds`);
-
     };
 
     // Add event listener for beforeunload and unload events
@@ -113,16 +112,21 @@ const ArticlePage = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ aid: state.data._id, time_spent: timeSpentOnPage, estimated_rt: state.data.estimated_reading_time }),
+        body: JSON.stringify({
+          aid: state.data._id,
+          time_spent: timeSpentOnPage,
+          estimated_rt: state.data.estimated_reading_time,
+        }),
       })
         .then((res) => {
-          console.log(`Return - Time spent on page: ${timeSpentOnPage} seconds`);
+          console.log(
+            `Return - Time spent on page: ${timeSpentOnPage} seconds`
+          );
           console.log("Like results:", res);
         })
         .catch((err) => {
           throw new Error(err);
         });
-          console.log(`Return - Time spent on page: ${timeSpentOnPage} seconds`);
     };
   }, []);
 
@@ -192,7 +196,9 @@ const ArticlePage = () => {
                 {username && username != " " ? username : "-:-"}
               </Text>
               <Avatar
-                name="Dan Abrahmov"
+                name="Prof Pictur"
+                border="1px solid black"
+                p="0.5"
                 size="lg"
                 src="https://bit.ly/code-beast"
               />
@@ -240,7 +246,12 @@ const ArticlePage = () => {
                 fontWeight="200"
               >
                 {state && state.data
-                  ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${state.data.category} - ${Math.ceil(state.data.estimated_reading_time/60) + " mins"}`
+                  ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${
+                      state.data.category
+                    } - ${
+                      Math.ceil(state.data.estimated_reading_time / 60) +
+                      " mins"
+                    }`
                   : ""}
               </Text>
 
