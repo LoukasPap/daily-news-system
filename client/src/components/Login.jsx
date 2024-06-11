@@ -241,7 +241,7 @@ const Login = () => {
         Create an account
       </Text>
 
-      <Box>
+      <Box mb="10">
         <form onSubmit={handleRegister}>
           <FormControl isRequired>
             <FormLabel>Username</FormLabel>

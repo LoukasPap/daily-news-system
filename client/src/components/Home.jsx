@@ -133,8 +133,8 @@ const Home = () => {
                     _hover={{ opacity: "80%" }}
                     border="1px solid black"
                     p="0.5"
-                    h="80px"
-                    size="lg"
+                    borderBottomStartRadius={0}
+                    size="xl"
                     src="https://bit.ly/code-beast"
                   />
                 </PopoverTrigger>
