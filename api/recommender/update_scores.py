@@ -3,6 +3,7 @@ import json
 from bson import json_util
 from helpers import parse_json
 from find_recommendations import main
+from datetime import datetime, timedelta
 
 client = MongoClient("localhost", 27017)
 db = client["Test11-full"]
@@ -51,25 +52,13 @@ def update_views():
 
 
 def update_recency_score():
+    d = datetime.today() - timedelta(days=7)
+
     pipeline = [
         {
-            '$addFields': {
-                'dateDifference': {
-                    '$abs': {
-                        '$dateDiff': {
-                            'startDate': '$datetime', 
-                            'endDate': '$$NOW', 
-                            'unit': 'hour', 
-                            'timezone': '+07', 
-                            'startOfWeek': 'mon'
-                        }
-                    }
-                }
-            }
-        }, {
             '$match': {
-                'dateDifference': {
-                    '$lte': 120
+                'datetime': {
+                    '$gte': d
                 }
             }
         }, {
@@ -89,7 +78,7 @@ def update_recency_score():
                                                 'startOfWeek': 'mon'
                                             }
                                         }
-                                    }, DECAY_CONSTANT
+                                    }, -0.1
                                 ]
                             }
                         }
@@ -117,8 +106,16 @@ def update_recency_score():
 
 def update_views_score():
     max_views: int = find_max_views_from_last_n_days(7)
+    d = datetime.today() - timedelta(days=7)
+
     pipeline = [
         {
+            '$match': {
+                'datetime': {
+                    '$gte': d
+                }
+            }
+        }, {
             '$addFields': {
                 'views_score': {
                     '$divide': [
@@ -141,8 +138,16 @@ def update_views_score():
 
 def update_likes_score():
     max_likes: int = find_max_likes_from_last_n_days(7)
+    d = datetime.today() - timedelta(days=7)
+
     pipeline = [
         {
+            '$match': {
+                'datetime': {
+                    '$gte': d
+                }
+            }
+        }, {
             '$addFields': {
                 'likes_score': {
                     '$divide': [
@@ -188,8 +193,6 @@ def generate_recommendation_scores():
 
         else:
             print(u["username"], "has already recommendations!")
-
-
 
 
 def update_all_scores():
@@ -351,6 +354,7 @@ def find_max_views_from_last_n_days(days: int):
 
 # uncomment and execute
 # update_views_score()
+# update_views()
 # update_recency_score()
 # update_likes_score()
-generate_recommendation_scores()
+# generate_recommendation_scores()
