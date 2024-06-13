@@ -1,3 +1,7 @@
+"""
+Functions to calculate recommendations for a user
+"""
+
 from pymongo import MongoClient
 import helpers
 import numpy as np

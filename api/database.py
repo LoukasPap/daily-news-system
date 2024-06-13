@@ -1,3 +1,7 @@
+"""
+Functions to communicate with database
+"""
+
 from pymongo import MongoClient, DESCENDING,  ReturnDocument
 import json
 from models import ArticleReadingTime, ArticleHistory

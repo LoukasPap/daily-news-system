@@ -1,3 +1,7 @@
+"""
+This script is for testing purposes
+"""
+
 from pymongo import MongoClient
 from bson import json_util
 from faker import Faker
@@ -7,7 +11,7 @@ from recommender.helpers import parse_json
 from random import randrange
 
 client = MongoClient("localhost", 27017)
-db = client["Test11-full"]
+db = client["Test11-full"] # name of DB
 articles = db["articles"]
 articles_scores = db["articles_scores"]
 authors = db["authors"]
@@ -16,9 +20,8 @@ users = db["users"]
 
 fake = Faker()
 
-
 def main():
-    username = "carl"
+    username = "<username>"
 
     # take 100 sample - 60 entertainment, 40 others
     response = articles.aggregate([
@@ -28,7 +31,7 @@ def main():
             }
         }, {
             '$sample': {
-                'size': 60
+                'size': 20
             }
         }, {
             '$unionWith': {
@@ -44,7 +47,7 @@ def main():
                         }
                     }, {
                         '$sample': {
-                            'size': 40
+                            'size': 80
                         }
                     }
                 ]

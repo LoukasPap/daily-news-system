@@ -1,3 +1,7 @@
+"""
+Various scripts for computing scores
+"""
+
 from pymongo import MongoClient, UpdateMany
 import json
 from bson import json_util
@@ -321,5 +325,5 @@ def find_max_views_from_last_n_days(days: int):
 # update_views()
 # update_recency_score()
 # update_likes_score()
-update_trend_score()
+# update_trend_score()
 # generate_recommendation_scores()

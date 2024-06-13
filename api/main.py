@@ -1,3 +1,8 @@
+"""
+Entry point of backend / Includes all APIs
+"""
+
+
 from models import *
 from fastapi import FastAPI, Depends, HTTPException, status, Form
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm

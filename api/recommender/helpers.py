@@ -1,3 +1,7 @@
+"""
+Functions that helps in recommendations
+"""
+
 import json
 from bson import json_util
 from datetime import datetime, timedelta

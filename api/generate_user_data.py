@@ -1,3 +1,7 @@
+"""
+This script is for testing purposes
+"""
+
 from pymongo import MongoClient
 from bson import json_util
 from faker import Faker
