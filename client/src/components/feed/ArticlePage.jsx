@@ -157,9 +157,8 @@ const ArticlePage = () => {
         <VStack
           alignItems="start"
           // border={"2px black solid"}
-          w="75%"
-          pl="5"
-          pr="5"
+          w={{ base: "100%", xl: "75%" }}
+          px={{ base: 4, md: 5 }}
           h="100%"
         >
           <Flex
@@ -167,11 +166,12 @@ const ArticlePage = () => {
             alignItems="center"
             zIndex="1"
             w="100%"
-            h="100px"
+            minH={{ base: "auto", md: "100px" }}
             bg="#F5FFE4"
             position="sticky"
             top="0"
-            pt="4"
+            pt={{ base: 3, md: 4 }}
+            pb={{ base: 2, md: 0 }}
             borderBottom="2px solid #FF3131"
             // backdropFilter="blur(5px)"
           >
@@ -180,26 +180,31 @@ const ArticlePage = () => {
                 as={"h1"}
                 fontWeight={"400"}
                 fontStyle={"normal"}
-                fontSize={"3em"}
+                fontSize={{ base: "2em", md: "3em" }}
+                lineHeight="normal"
                 color="#FF3131"
                 alignSelf="end"
               >
                 early bird
               </Heading>
-              <Text mb="5px" fontFamily="Modern No. 20" fontSize="2xl">
+              <Text
+                mb="5px"
+                fontFamily="'Modern No. 20', serif"
+                fontSize={{ base: "lg", md: "2xl" }}
+              >
                 a daily standard
               </Text>
             </RRLink>
 
             <HStack>
-              <Text fontSize="xl">
+              <Text fontSize="xl" display={{ base: "none", sm: "block" }}>
                 {username && username != " " ? username : "-:-"}
               </Text>
               <Avatar
                 name="Prof Pictur"
                 border="1px solid black"
                 p="0.5"
-                size="lg"
+                size={{ base: "md", md: "lg" }}
                 src="https://bit.ly/code-beast"
               />
             </HStack>
@@ -208,14 +213,16 @@ const ArticlePage = () => {
           <Box
             w="100%"
             bg="#1F1F1F"
-            borderBottomEndRadius="30px"
-            borderBottomStartRadius="30px"
-            p="20"
+            borderBottomEndRadius={{ base: "20px", md: "30px" }}
+            borderBottomStartRadius={{ base: "20px", md: "30px" }}
+            p={{ base: 5, md: 10, lg: 20 }}
           >
             <Flex
               // border="2px solid blue"
               justifyContent="space-between"
               alignItems="center"
+              flexWrap="wrap"
+              columnGap="4"
               mb="2"
             >
               <IconButton
@@ -239,11 +246,16 @@ const ArticlePage = () => {
                 icon={liked ? <BranchSVG_clicked /> : <BranchSVG />}
               />
 
+              {/* on phones the meta line drops below the like / source row */}
               <Text
                 color="#A7A7A7"
                 textAlign="center"
-                fontSize="xl"
+                fontSize={{ base: "sm", md: "xl" }}
                 fontWeight="200"
+                order={{ base: 1, md: 0 }}
+                flexBasis={{ base: "100%", md: "auto" }}
+                flexShrink="1"
+                minW="0"
               >
                 {state && state.data
                   ? `${state.data.datetime} ⬝ ${state.data.new_site} ⬝ ${
@@ -257,7 +269,7 @@ const ArticlePage = () => {
 
               <Link
                 color="#C5C909"
-                fontSize="xl"
+                fontSize={{ base: "md", md: "xl" }}
                 fontWeight="200"
                 href={state && state.data ? state.data._id : ""}
                 isExternal={true}
@@ -269,32 +281,55 @@ const ArticlePage = () => {
             <Heading
               color="#FFFFFF"
               fontWeight="400"
-              fontSize="5xl"
+              fontSize={{ base: "2xl", md: "4xl", lg: "5xl" }}
               textAlign="center"
+              mt={{ base: 3, md: 0 }}
+              overflowWrap="anywhere"
             >
               {state && state.data ? state.data.title : ""}
             </Heading>
 
-            <HStack direction="row" mt="5" justifyContent="center">
+            <Flex
+              mt="5"
+              justifyContent="center"
+              flexWrap="wrap"
+              columnGap="4"
+              rowGap="2"
+            >
               {state && state.data
-                ? state.data.authors.map((author) => (
-                    <>
+                ? state.data.authors.map((author, index) => (
+                    <HStack key={`${author}-${index}`}>
                       <Avatar name={author} size="sm" zIndex="-0" />
-                      <Text color="#A7A7A7" fontWeight="200" fontSize="xl">
+                      <Text
+                        color="#A7A7A7"
+                        fontWeight="200"
+                        fontSize={{ base: "md", md: "xl" }}
+                      >
                         {author}
                       </Text>
-                    </>
+                    </HStack>
                   ))
                 : ""}
-            </HStack>
+            </Flex>
 
-            <Text color="#FFF" mt="5" fontSize="2xl" fontWeight="200">
+            <Box
+              color="#FFF"
+              mt="5"
+              fontSize={{ base: "lg", md: "2xl" }}
+              fontWeight="200"
+              overflowWrap="anywhere"
+              // keep scraped media / tables inside the box on small screens
+              sx={{
+                "& img, & video, & iframe": { maxW: "100%", h: "auto" },
+                "& table, & pre": { display: "block", maxW: "100%", overflowX: "auto" },
+              }}
+            >
               {/* {state && state.data ? state.data.body : ""} */}
               <div dangerouslySetInnerHTML={{ __html: articleBody }} />
-            </Text>
+            </Box>
           </Box>
 
-          <Text textAlign="center" m="5" w="100%">
+          <Text textAlign="center" p="5" w="100%">
             ©2024 Early Bird Greece, Inc. All rights reserved.
           </Text>
         </VStack>

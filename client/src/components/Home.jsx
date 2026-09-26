@@ -18,6 +18,7 @@ import {
   PopoverBody,
   PopoverCloseButton,
   Portal,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import ArticlesOrder from "./feed/ArticlesOrder";
 import FilterBar from "./feed/FiltersBar";
@@ -34,6 +35,7 @@ const Home = () => {
 
   const ref = useRef();
   const isVisible = useIsVisible(ref);
+  const popoverPlacement = useBreakpointValue({ base: "bottom-end", md: "start" });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -83,58 +85,65 @@ const Home = () => {
   };
 
   return (
-    <>
+    <Box bg="#FAF9DD" minH="100vh">
       {state && state.error ? (
         <Alert status="error" justifyContent="center">
           <AlertIcon />
           <AlertTitle>{state.error}</AlertTitle>
         </Alert>
       ) : null}
-      <Box visibility="hidden" h="100px"></Box>
+      <Box visibility="hidden" h={{ base: "40px", md: "100px" }}></Box>
 
       <Flex justifyContent="center">
         <VStack
           alignItems="start"
-          // border={"2px black solid"}
-          w="75%"
-          pl="5"
-          pr="5"
+          spacing={{ base: "22px", md: 2 }}
+          w={{ base: "100%", xl: "75%" }}
+          px={{ base: "30px", md: 5 }}
           h="100%"
         >
-          <Flex w="100%" alignItems="end" justify="space-between" ref={ref}>
-            <Flex>
+          <Flex
+            w="100%"
+            alignItems={{ base: "start", md: "end" }}
+            justify="space-between"
+            ref={ref}
+          >
+            <Flex direction={{ base: "column", md: "row" }}>
               <Heading
                 as={"h1"}
-                fontWeight={"400"}
+                fontWeight={{ base: "350", md: "400" }}
                 fontStyle={"normal"}
-                fontSize={"5em"}
+                fontSize={{ base: "40px", md: "5em" }}
+                lineHeight="normal"
                 color="#FF3131"
-                alignSelf="end"
+                alignSelf={{ base: "start", md: "end" }}
               >
                 <Text alignSelf="end" h="100%">
                   early <br /> bird
                 </Text>
               </Heading>
               <Text
-                alignSelf="end"
-                mb="5px"
-                fontFamily="Modern No. 20"
-                fontSize="2xl"
-                h="100%"
+                alignSelf={{ base: "start", md: "end" }}
+                mt={{ base: "13px", md: 0 }}
+                mb={{ base: 0, md: "5px" }}
+                fontFamily="'Modern No. 20', serif"
+                fontSize={{ base: "29px", md: "2xl" }}
+                lineHeight="normal"
+                color="black"
               >
                 a daily standard
               </Text>
             </Flex>
 
-            <HStack mr="5">
-              <Popover placement="start">
+            <HStack mr={{ base: 0, md: 5 }}>
+              <Popover placement={popoverPlacement}>
                 <PopoverTrigger>
                   <Avatar
                     _hover={{ opacity: "80%" }}
                     border="1px solid black"
                     p="0.5"
                     borderBottomStartRadius={0}
-                    size="xl"
+                    size={{ base: "md", md: "xl" }}
                     src="https://bit.ly/code-beast"
                   />
                 </PopoverTrigger>
@@ -171,10 +180,10 @@ const Home = () => {
           <ArticlesOrder data={feed} />
         </VStack>
       </Flex>
-      <Text textAlign="center" m="5" w="100%">
+      <Text textAlign="center" p="5">
         ©2024 Early Bird Greece, Inc. All rights reserved.
       </Text>
-    </>
+    </Box>
   );
 };
 

@@ -27,6 +27,8 @@ const ArticleBox = ({ articleData, articleIndex }) => {
           fontSize={sizes[Math.floor(Math.random() * sizes.length)]}
           fontWeight="300"
           color="#FFFFFF"
+          // break long words so narrow columns don't overflow
+          overflowWrap="anywhere"
         >
           {articleData.title}
         </Text>

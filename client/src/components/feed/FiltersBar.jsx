@@ -24,10 +24,10 @@ const FilterBar = ({ onFeedFetch, isHeaderVisible }) => {
       position="sticky"
       w="100%"
       top="0"
-      bg="#F5FFE4"
+      bg="#FAF9DD"
       zIndex="1"
-      pt="5"
-      pb="5"
+      pt={{ base: 3, md: 5 }}
+      pb={{ base: 3, md: 5 }}
     >
       <TabList>
         {/* <Tab
@@ -35,19 +35,21 @@ const FilterBar = ({ onFeedFetch, isHeaderVisible }) => {
           fontWeight="500"
           mr="4"
           fontFamily="KyivType Titling"
-          fontSize="lg"
+          fontSize={{ base: "md", md: "lg" }}
         >
           {isHeaderVisible === "false" ? "early bird" : null}
         </Tab> */}
 
         <Tab
-          w="140px"
+          w={{ base: "auto", md: "140px" }}
+          flex={{ base: 1, md: "none" }}
+          px={{ base: 2, md: 4 }}
           h="30px"
           borderRadius="10px"
           border="2px dashed #303030"
           bg="transparent"
           textAlign="center"
-          fontSize="lg"
+          fontSize={{ base: "md", md: "lg" }}
           fontWeight="400"
           color="#303030"
           _hover={{ bg: "#BABABA" }}
@@ -57,14 +59,16 @@ const FilterBar = ({ onFeedFetch, isHeaderVisible }) => {
           Latest
         </Tab>
         <Tab
-          w="140px"
+          w={{ base: "auto", md: "140px" }}
+          flex={{ base: 1, md: "none" }}
+          px={{ base: 2, md: 4 }}
           h="30px"
-          ml="5"
+          ml={{ base: 2, md: 5 }}
           borderRadius="10px"
           border="2px dashed #303030"
           bg="transparent"
           textAlign="center"
-          fontSize="lg"
+          fontSize={{ base: "md", md: "lg" }}
           fontWeight="400"
           color="#303030"
           _hover={{ bg: "#BABABA" }}
@@ -74,14 +78,16 @@ const FilterBar = ({ onFeedFetch, isHeaderVisible }) => {
           Trend
         </Tab>
         <Tab
-          w="140px"
+          w={{ base: "auto", md: "140px" }}
+          flex={{ base: 1, md: "none" }}
+          px={{ base: 2, md: 4 }}
           h="30px"
-          ml="4"
+          ml={{ base: 2, md: 4 }}
           borderRadius="10px"
           border="2px dashed #303030"
           bg="transparent"
           textAlign="center"
-          fontSize="lg"
+          fontSize={{ base: "md", md: "lg" }}
           fontWeight="400"
           color="#303030"
           _hover={{ bg: "#BABABA" }}

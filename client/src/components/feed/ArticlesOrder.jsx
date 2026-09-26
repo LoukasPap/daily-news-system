@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 
-import { VStack, HStack, Text } from "@chakra-ui/react";
+import { Box, HStack, VStack, Text } from "@chakra-ui/react";
 
 import { Link as RRLink, useNavigate } from "react-router-dom";
 import ArticleBox from "./ArticleBox";
+import ArticleRow from "./ArticleRow";
 
 const ArticlesOrder = ({ data }) => {
   const navigate = useNavigate();
@@ -54,26 +55,56 @@ const ArticlesOrder = ({ data }) => {
   return (
     <>
       {typeof data !== "string" ? (
-        <HStack align={"start"}>
-          {data.map((articlesArray, outerIndex) => (
-            <VStack p="1">
-              {articlesArray.map((articleObj, inIndex) => (
-                <RRLink
-                  to={`/article/${articleObj.title.replaceAll("/", "-")}`}
-                  state={{ data: articleObj }}
-                  onClick={(e) =>
-                    updateViewHistory(e, articleObj._id, articleObj.category)
-                  }
-                >
-                  <ArticleBox
-                    articleData={articleObj}
-                    articleIndex={`${outerIndex}_${inIndex}`}
-                  />
-                </RRLink>
-              ))}
-            </VStack>
-          ))}
-        </HStack>
+        <>
+          {/* mobile: one column of rows (switched with CSS so it follows window resizes) */}
+          <VStack
+            display={{ base: "flex", lg: "none" }}
+            w="100%"
+            spacing="22px"
+            align="stretch"
+          >
+            {data.flat().map((articleObj, index) => (
+              <Box
+                as={RRLink}
+                key={articleObj._id}
+                display="block"
+                to={`/article/${articleObj.title.replaceAll("/", "-")}`}
+                state={{ data: articleObj }}
+                onClick={(e) =>
+                  updateViewHistory(e, articleObj._id, articleObj.category)
+                }
+              >
+                <ArticleRow articleData={articleObj} articleIndex={index} />
+              </Box>
+            ))}
+          </VStack>
+
+          {/* desktop: each chunk of the feed is a column */}
+          <HStack display={{ base: "none", lg: "flex" }} w="100%" align={"start"}>
+            {data.map((articlesArray, outerIndex) => (
+              // columns share the width equally and shrink with the window
+              <VStack p="1" key={outerIndex} flex="1" minW="0" align="stretch">
+                {articlesArray.map((articleObj, inIndex) => (
+                  <Box
+                    as={RRLink}
+                    key={articleObj._id}
+                    display="block"
+                    to={`/article/${articleObj.title.replaceAll("/", "-")}`}
+                    state={{ data: articleObj }}
+                    onClick={(e) =>
+                      updateViewHistory(e, articleObj._id, articleObj.category)
+                    }
+                  >
+                    <ArticleBox
+                      articleData={articleObj}
+                      articleIndex={`${outerIndex}_${inIndex}`}
+                    />
+                  </Box>
+                ))}
+              </VStack>
+            ))}
+          </HStack>
+        </>
       ) : (
         <Text w="100%" fontSize="xl">{data}</Text>
       )}
