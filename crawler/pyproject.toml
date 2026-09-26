@@ -1,0 +1,12 @@
+[project]
+name = "crawler"
+version = "0.1.0"
+description = "Early Bird news crawler (Scrapy)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "scrapy",
+    "pymongo",
+    "pytz",
+    "readtime",
+]

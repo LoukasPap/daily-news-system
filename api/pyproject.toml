@@ -1,0 +1,24 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Early Bird backend: FastAPI server and recommender"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pymongo",
+    "python-jose[cryptography]",
+    "python-multipart",
+    "passlib[bcrypt]",
+    # passlib 1.7.4 crashes on bcrypt>=5 (it hashes a >72-byte test password on first use)
+    "bcrypt<5",
+    "numpy",
+]
+
+[dependency-groups]
+dev = [
+    # only used by the generate_*_user_data.py test-data scripts
+    "faker",
+]

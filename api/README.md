@@ -1,4 +1,4 @@
 # APIs
-Implemented with FastAPI and using MongoDB as the database.
+Implemented with FastAPI and MongoDB as the database.
 
-To run the server, create a virtual environment called 'api-venv' (name is for .gitignore purposes). After activating it, execute `pip install fastapi "uvicorn[standard]"` to install the necessary packages. Finally, run `uvicorn main:app --reload` to start the server.
+Dependencies are managed with [uv](https://docs.astral.sh/uv/). To install them, run `uv sync` inside this folder (it creates a `.venv` and installs everything from `uv.lock`). Then run `uv run uvicorn main:app --reload` to start the server.
