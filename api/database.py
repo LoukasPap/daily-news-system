@@ -51,9 +51,13 @@ def find_user_by_username(username):
 def get_feed(category, filter, username):
     articles_list = []
     sites = ["AP", "NBC", "CNN", "NPR"]
+    # optional category filter: comma-separated categories, "all" = no filter.
+    # applied before sorting / limiting
+    categories = [c for c in filter.split(",") if c and c != "all"]
+    category_match = [{"$match": {"category": {"$in": categories}}}] if categories else []
 
     if category == "latest":
-        pipeline = [
+        pipeline = category_match + [
             {
                 "$sort": {
                     "datetime": -1
@@ -99,8 +103,8 @@ def get_feed(category, filter, username):
         ]
         
         print("LATEST PIPELINE")
-        response = articles.aggregate(pipeline)
-        articles_list = parse_json(response)[0]["allDocuments"]
+        response = parse_json(articles.aggregate(pipeline))
+        articles_list = response[0]["allDocuments"] if response else []
 
     elif category == "trend":
         pipeline = [
@@ -131,7 +135,9 @@ def get_feed(category, filter, username):
                 "$project": {
                     "article": 0
                 }
-            }, {
+            },
+            *category_match,
+            {
                 "$sort": {
                     "trend_score": -1
                 }
@@ -213,7 +219,9 @@ def get_feed(category, filter, username):
                     'username': 0, 
                     'joined': 0
                 }
-            }, {
+            },
+            *category_match,
+            {
                 '$sort': {
                     'score': -1
                 }
