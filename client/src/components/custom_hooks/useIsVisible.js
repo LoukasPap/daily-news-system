@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 
 
 export function useIsVisible(ref) {
-    const [isIntersecting, setIntersecting] = useState(false);
+    // assume visible until the observer reports, so the sticky bar does not flash its compact mode
+    const [isIntersecting, setIntersecting] = useState(true);
   
     useEffect(() => {
       const observer = new IntersectionObserver(([entry]) =>
